@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Study Notes - StudyHub</title>
+  <meta name="description" content="Share your study notes. Upload PDF, DOCX, or PPTX files to help other students and build your academic profile.">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .upload-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 3rem 2rem;
+      text-align: center;
+      background-color: #fafbfd;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background-color: var(--primary-light);
+    }
+    
+    .file-details-preview {
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar Header -->
+  <header>
+    <div class="container navbar-wrapper">
+      <!-- Generated dynamically in main.js -->
+    </div>
+  </header>
+
+  <!-- Route Guard Script (execute early before DOM renders to prevent flicker) -->
+  <script src="js/auth.js"></script>
+  <script>
+    // Ensure user is logged in
+    guardPage();
+  </script>
+
+  <!-- Main Upload Section -->
+  <main class="main-content">
+    <div class="container">
+      
+      <div class="upload-container">
+        <!-- Page Header -->
+        <div class="page-header animate-slide-up" style="margin-bottom: 2rem; padding: 2.5rem 0;">
+          <h1>Upload Study Notes</h1>
+          <p>Share your study resources with fellow students. Once approved, it will be visible on the browse directory.</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="card animate-slide-up" style="box-shadow: var(--shadow-md);">
+          <div class="card-body" style="padding: 2rem;">
+            
+            <form id="uploadForm">
+              
+              <div class="form-group">
+                <label for="noteTitle">Note Title *</label>
+                <input type="text" id="noteTitle" class="form-control" placeholder="e.g. Unit 3 DBMS Normalization Notes" required>
+                <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Keep it short and descriptive.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="noteDescription">Short Description *</label>
+                <textarea id="noteDescription" class="form-control" placeholder="Describe the topics covered in this document (e.g., Covers 1NF, 2NF, 3NF, Boyce-Codd Normal Form with SQL examples...)" required></textarea>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-group">
+                  <label for="noteSemester">Semester *</label>
+                  <select id="noteSemester" class="form-control" required>
+                    <option value="" disabled selected>Select Semester</option>
+                    <option value="Semester 1">Semester 1</option>
+                    <option value="Semester 2">Semester 2</option>
+                    <option value="Semester 3">Semester 3</option>
+                    <option value="Semester 4">Semester 4</option>
+                    <option value="Semester 5">Semester 5</option>
+                    <option value="Semester 6">Semester 6</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="noteSubject">Subject *</label>
+                  <select id="noteSubject" class="form-control" required disabled>
+                    <option value="" disabled selected>Select Subject</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-group">
+                  <label for="noteFileType">File Format *</label>
+                  <select id="noteFileType" class="form-control" required>
+                    <option value="pdf">PDF (.pdf)</option>
+                    <option value="docx">Word (.docx)</option>
+                    <option value="pptx">PowerPoint (.pptx)</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="noteFileSize">Estimated File Size</label>
+                  <input type="text" id="noteFileSize" class="form-control" value="2.4 MB" placeholder="e.g. 2.4 MB">
+                </div>
+              </div>
+
+              <!-- File Upload Dropzone -->
+              <div class="form-group" style="margin-top: 1.5rem;">
+                <label>Select Document File *</label>
+                <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx" style="display: none;" required>
+                
+                <div class="dropzone" id="dropzone">
+                  <i data-lucide="cloud-upload" style="width: 48px; height: 48px; color: var(--primary);"></i>
+                  <div style="font-weight: 700; font-size: 1.1rem; color: var(--secondary);">Drag & Drop your file here</div>
+                  <div style="color: var(--text-muted); font-size: 0.875rem;">Or click to browse from files</div>
+                  <div style="color: var(--text-muted); font-size: 0.75rem;">Supports PDF, Word, and PowerPoint (Max size 10MB)</div>
+                </div>
+
+                <!-- Selected File Display -->
+                <div class="file-details-preview" id="filePreview">
+                  <i data-lucide="file-text" style="width: 32px; height: 32px; color: var(--primary); flex-shrink: 0;"></i>
+                  <div style="flex-grow: 1;">
+                    <div id="previewFileName" style="font-weight: 700; font-size: 0.875rem; color: var(--secondary); word-break: break-all;">notes_doc.pdf</div>
+                    <div id="previewFileSize" style="color: var(--text-muted); font-size: 0.75rem;">2.4 MB</div>
+                  </div>
+                  <button type="button" id="removeFileBtn" class="btn btn-sm btn-outline" style="padding: 0.25rem 0.5rem; border-color: var(--danger); color: var(--danger);">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Buttons -->
+              <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                <a href="dashboard.html" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                  <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+                  Submit for Approval
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="modern-footer">
+    <div class="container">
+      <div class="modern-footer-content">
+        <a href="index.html" class="modern-footer-logo">
+          <i data-lucide="graduation-cap" style="width: 32px; height: 32px; stroke-width: 2.5; color: var(--primary);"></i>
+          StudyHub<span style="color: var(--primary);">.</span>
+        </a>
+        <ul class="modern-footer-links">
+          <li><a href="index.html" class="modern-footer-link">Home</a></li>
+          <li><a href="notes.html" class="modern-footer-link">Browse Notes</a></li>
+          <li><a href="upload.html" class="modern-footer-link" id="footerUploadLink">Upload</a></li>
+          <li><a href="contact.html" class="modern-footer-link">Contact</a></li>
+        </ul>
+        <div class="modern-footer-divider"></div>
+        <div class="modern-footer-bottom">
+          <p>StudyHub &copy; 2026 | Made for Students</p>
+          <p>No Backend Demo. All information stored in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const noteSemester = document.getElementById('noteSemester');
+      const noteSubject = document.getElementById('noteSubject');
+      const uploadForm = document.getElementById('uploadForm');
+      
+      const fileInput = document.getElementById('fileInput');
+      const dropzone = document.getElementById('dropzone');
+      const filePreview = document.getElementById('filePreview');
+      const previewFileName = document.getElementById('previewFileName');
+      const previewFileSize = document.getElementById('previewFileSize');
+      const removeFileBtn = document.getElementById('removeFileBtn');
+
+      let selectedFile = null;
+
+      // 1. Dynamic Subject Loader
+      noteSemester.addEventListener('change', () => {
+        const semesterVal = noteSemester.value;
+        noteSubject.disabled = false;
+        noteSubject.innerHTML = '<option value="" disabled selected>Select Subject</option>';
+        
+        const subjects = COURSE_SUBJECTS[semesterVal] || [];
+        subjects.forEach(sub => {
+          noteSubject.innerHTML += `<option value="${sub}">${sub}</option>`;
+        });
+      });
+
+      // 2. Click dropzone to browse
+      dropzone.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      // 3. Handle file selection
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+          handleFile(fileInput.files[0]);
+        }
+      });
+
+      // 4. Drag & Drop events
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          dropzone.classList.add('dragover');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+        }, false);
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+
+      function handleFile(file) {
+        selectedFile = file;
+        previewFileName.innerText = file.name;
+        
+        // Calculate readable file size
+        const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
+        previewFileSize.innerText = `${sizeInMb} MB`;
+        document.getElementById('noteFileSize').value = `${sizeInMb} MB`;
+
+        // Update file type dropdown based on extension
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'pdf') {
+          document.getElementById('noteFileType').value = 'pdf';
+        } else if (['doc', 'docx'].includes(ext)) {
+          document.getElementById('noteFileType').value = 'docx';
+        } else if (['ppt', 'pptx'].includes(ext)) {
+          document.getElementById('noteFileType').value = 'pptx';
+        }
+
+        // Swap dropzone and preview display
+        dropzone.style.display = 'none';
+        filePreview.style.display = 'flex';
+      }
+
+      // 5. Remove selected file
+      removeFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedFile = null;
+        fileInput.value = '';
+        dropzone.style.display = 'flex';
+        filePreview.style.display = 'none';
+      });
+
+      // 6. Submit upload note form
+      uploadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('noteTitle').value;
+        const description = document.getElementById('noteDescription').value;
+        const semester = noteSemester.value;
+        const subject = noteSubject.value;
+        const fileType = document.getElementById('noteFileType').value;
+        const fileSize = document.getElementById('noteFileSize').value;
+
+        // Perform mock upload (saves to localStorage)
+        const result = uploadNote(title, description, subject, semester, fileType, fileSize);
+        
+        if (result.success) {
+          showToast('Notes submitted! Pending admin review.', 'success');
+          uploadForm.reset();
+          selectedFile = null;
+          dropzone.style.display = 'flex';
+          filePreview.style.display = 'none';
+          noteSubject.disabled = true;
+
+          setTimeout(() => {
+            window.location.href = 'notes.html';
+          }, 1200);
+        } else {
+          showToast(result.error || 'Failed to upload notes', 'danger');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

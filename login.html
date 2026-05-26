@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login & Signup - StudyHub</title>
+  <meta name="description" content="Access your StudyHub account. Log in or sign up to download, upload and manage study notes.">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Navbar Header -->
+  <header>
+    <div class="container navbar-wrapper">
+      <!-- Generated dynamically in main.js -->
+    </div>
+  </header>
+
+  <!-- Login/Signup Body -->
+  <main class="main-content flex-center" style="background: radial-gradient(circle at center, var(--primary-light) 0%, var(--bg-main) 100%);">
+    <div class="container flex-center">
+      
+      <div class="card animate-slide-up" style="width: 100%; max-width: 450px; box-shadow: var(--shadow-xl);">
+        
+        <!-- Tab Headers -->
+        <div style="display: flex; border-bottom: 1px solid var(--border-color); background-color: #f8fafc;">
+          <button id="tabLogin" class="tab-btn active" style="flex: 1; padding: 1.25rem; font-weight: 700; font-size: 1rem; border: none; background: none; cursor: pointer; color: var(--primary); border-bottom: 3.5px solid var(--primary); transition: var(--transition-fast);">
+            Log In
+          </button>
+          <button id="tabSignup" class="tab-btn" style="flex: 1; padding: 1.25rem; font-weight: 700; font-size: 1rem; border: none; background: none; cursor: pointer; color: var(--text-muted); border-bottom: 3.5px solid transparent; transition: var(--transition-fast);">
+            Sign Up
+          </button>
+        </div>
+
+        <div class="card-body" style="padding: 2.25rem 2rem;">
+          
+          <!-- LOGIN FORM -->
+          <form id="loginForm" class="auth-form active-form">
+            <h2 class="mb-3" style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">Welcome Back</h2>
+            
+            <div class="form-group">
+              <label for="loginEmail">Email Address</label>
+              <div style="position: relative;">
+                <input type="email" id="loginEmail" class="form-control" placeholder="name@email.com" required style="padding-left: 2.5rem;">
+                <i data-lucide="mail" style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label for="loginPassword" style="margin-bottom: 0;">Password</label>
+                <a href="#" style="font-size: 0.8125rem; color: var(--primary); font-weight: 600;" onclick="showToast('Password reset is simulated. Use student123 or admin123!', 'warning')">Forgot Password?</a>
+              </div>
+              <div style="position: relative;">
+                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required style="padding-left: 2.5rem;">
+                <i data-lucide="lock" style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="checkbox-group">
+                <input type="checkbox" id="rememberMe">
+                <span style="font-size: 0.875rem; color: var(--text-muted);">Keep me logged in</span>
+              </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full mt-1">
+              Log In
+              <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+            </button>
+            
+            <div class="mt-3 text-center" style="text-align: center; font-size: 0.875rem; color: var(--text-muted);">
+              Testing Credentials:<br>
+              Student: <strong style="color: var(--secondary);">student@studyhub.com</strong> / <strong style="color: var(--secondary);">student123</strong><br>
+              Admin: <strong style="color: var(--secondary);">admin@studyhub.com</strong> / <strong style="color: var(--secondary);">admin123</strong>
+            </div>
+          </form>
+
+          <!-- SIGNUP FORM (hidden by default) -->
+          <form id="signupForm" class="auth-form" style="display: none;">
+            <h2 class="mb-3" style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">Create Student Account</h2>
+            
+            <div class="form-group">
+              <label for="signupUsername">Username</label>
+              <div style="position: relative;">
+                <input type="text" id="signupUsername" class="form-control" placeholder="sourav_s" required style="padding-left: 2.5rem;">
+                <i data-lucide="user" style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="signupEmail">Email Address</label>
+              <div style="position: relative;">
+                <input type="email" id="signupEmail" class="form-control" placeholder="name@email.com" required style="padding-left: 2.5rem;">
+                <i data-lucide="mail" style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="signupPassword">Password</label>
+              <div style="position: relative;">
+                <input type="password" id="signupPassword" class="form-control" placeholder="••••••••" required style="padding-left: 2.5rem;">
+                <i data-lucide="lock" style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="signupPasswordConfirm">Confirm Password</label>
+              <div style="position: relative;">
+                <input type="password" id="signupPasswordConfirm" class="form-control" placeholder="••••••••" required style="padding-left: 2.5rem;">
+                <i data-lucide="check" style="position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="checkbox-group">
+                <input type="checkbox" required>
+                <span style="font-size: 0.875rem; color: var(--text-muted);">I agree to the Terms of Service & Privacy Policy</span>
+              </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full mt-1">
+              Create Account
+              <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="modern-footer" style="margin-top: auto;">
+    <div class="container">
+      <div class="modern-footer-content">
+        <a href="index.html" class="modern-footer-logo">
+          <i data-lucide="graduation-cap" style="width: 32px; height: 32px; stroke-width: 2.5; color: var(--primary);"></i>
+          StudyHub<span style="color: var(--primary);">.</span>
+        </a>
+        <ul class="modern-footer-links">
+          <li><a href="index.html" class="modern-footer-link">Home</a></li>
+          <li><a href="notes.html" class="modern-footer-link">Browse Notes</a></li>
+          <li><a href="upload.html" class="modern-footer-link" id="footerUploadLink">Upload</a></li>
+          <li><a href="contact.html" class="modern-footer-link">Contact</a></li>
+        </ul>
+        <div class="modern-footer-divider"></div>
+        <div class="modern-footer-bottom">
+          <p>StudyHub &copy; 2026 | Made for Students</p>
+          <p>No Backend Demo. All information stored in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Tab switching logic
+    const tabLogin = document.getElementById('tabLogin');
+    const tabSignup = document.getElementById('tabSignup');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+
+    function switchTab(target) {
+      if (target === 'login') {
+        tabLogin.style.color = 'var(--primary)';
+        tabLogin.style.borderBottomColor = 'var(--primary)';
+        tabSignup.style.color = 'var(--text-muted)';
+        tabSignup.style.borderBottomColor = 'transparent';
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+      } else {
+        tabSignup.style.color = 'var(--primary)';
+        tabSignup.style.borderBottomColor = 'var(--primary)';
+        tabLogin.style.color = 'var(--text-muted)';
+        tabLogin.style.borderBottomColor = 'transparent';
+        signupForm.style.display = 'block';
+        loginForm.style.display = 'none';
+      }
+    }
+
+    tabLogin.addEventListener('click', () => switchTab('login'));
+    tabSignup.addEventListener('click', () => switchTab('signup'));
+
+    // Check query params on load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'signup') {
+      switchTab('signup');
+    }
+
+    // Login Form Submit
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+
+      const result = loginUser(email, pass);
+      if (result.success) {
+        showToast('Login Successful! Welcome, ' + result.user.username, 'success');
+        
+        // Redirect to dashboard (or admin if admin) or previous redirect url
+        setTimeout(() => {
+          const redirect = urlParams.get('redirect');
+          if (redirect) {
+            window.location.href = decodeURIComponent(redirect);
+          } else {
+            window.location.href = result.user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+          }
+        }, 1200);
+      } else {
+        showToast(result.error, 'danger');
+      }
+    });
+
+    // Signup Form Submit
+    signupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('signupUsername').value;
+      const email = document.getElementById('signupEmail').value;
+      const pass = document.getElementById('signupPassword').value;
+      const passConfirm = document.getElementById('signupPasswordConfirm').value;
+
+      if (pass !== passConfirm) {
+        showToast('Passwords do not match!', 'danger');
+        return;
+      }
+
+      const result = registerUser(username, email, pass);
+      if (result.success) {
+        showToast('Registration Successful!', 'success');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1200);
+      } else {
+        showToast(result.error, 'danger');
+      }
+    });
+
+    // If logged in, redirect away from login page
+    if (getCurrentUser()) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>

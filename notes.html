@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Study Notes - StudyHub</title>
+  <meta name="description" content="Search and filter through study notes by semester, subject and file type. Free instant downloads for students.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Browse Notes page — UI only */
+    .notes-browse-page.main-content {
+      padding-top: calc(var(--header-height) + 1.25rem);
+      padding-bottom: 3rem;
+    }
+
+    .notes-browse-page .page-header--compact {
+      text-align: left;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, var(--primary-light) 0%, #fff 55%);
+      border: 1px solid rgba(37, 99, 235, 0.12);
+      border-radius: var(--radius-lg);
+    }
+
+    .notes-browse-page .page-header--compact h1 {
+      font-size: 1.625rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+      line-height: 1.2;
+    }
+
+    .notes-browse-page .page-header--compact p {
+      font-size: 0.9375rem;
+      max-width: none;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .notes-toolbar {
+      margin-bottom: 1.25rem;
+    }
+
+    .notes-browse-page .search-wrapper {
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+
+    .notes-browse-page .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      font-size: 0.9375rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      background: #fff;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .notes-browse-page .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .notes-browse-page .search-icon {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .quick-filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .quick-filter-chips__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 0.25rem;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .filter-chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .notes-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .filter-sidebar {
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      position: sticky;
+      top: calc(var(--header-height) + 0.75rem);
+      align-self: start;
+      max-height: calc(100vh - var(--header-height) - 1.5rem);
+      overflow-y: auto;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    }
+
+    .filter-sidebar__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .filter-sidebar__head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+
+    .filter-group {
+      margin-bottom: 1.125rem;
+    }
+
+    .filter-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-group-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .notes-results-panel {
+      min-width: 0;
+    }
+
+    .notes-header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+    }
+
+    .notes-count-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .notes-count-text strong {
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    .notes-browse-page #sortNotes {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8125rem;
+      min-width: 10rem;
+    }
+
+    #notesGrid.notes-grid--browse {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .browse-note-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+      overflow: hidden;
+    }
+
+    .browse-note-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border-color: rgba(37, 99, 235, 0.2);
+    }
+
+    .browse-note-card .card-body {
+      padding: 1.125rem 1.125rem 1rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      gap: 0;
+    }
+
+    .browse-note-card .note-tags {
+      margin-bottom: 0.75rem;
+      gap: 0.375rem;
+    }
+
+    .browse-note-card .card-title {
+      font-size: 1.0625rem;
+      margin-bottom: 0.4rem;
+      line-height: 1.35;
+    }
+
+    .browse-note-card .card-text {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+      -webkit-line-clamp: 2;
+    }
+
+    .browse-note-card .note-meta {
+      padding-top: 0.75rem;
+      margin-top: auto;
+      margin-bottom: 0.875rem;
+      border-top: 1px solid #f1f5f9;
+      font-size: 0.75rem;
+    }
+
+    .browse-note-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .browse-note-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+    }
+
+    .browse-btn-download {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+    }
+
+    .browse-btn-download:hover {
+      background: var(--primary-hover);
+      color: #fff;
+    }
+
+    .browse-btn-view {
+      background: #fff;
+      border: 1.5px solid var(--border-color);
+      color: var(--secondary);
+    }
+
+    .browse-btn-view:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .browse-btn-delete {
+      grid-column: 1 / -1;
+      background: #fff;
+      border: 1.5px solid rgba(239, 68, 68, 0.45);
+      color: var(--danger);
+    }
+
+    .browse-btn-delete:hover {
+      background: var(--danger-light);
+      border-color: var(--danger);
+      color: #dc2626;
+    }
+
+    .notes-empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--border-color);
+    }
+
+    /* View modal */
+    .note-view-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .note-view-modal.is-open {
+      display: flex;
+    }
+
+    .note-view-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(3px);
+    }
+
+    .note-view-modal__dialog {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      padding: 1.5rem;
+    }
+
+    .note-view-modal__close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+
+    @media (max-width: 992px) {
+      .notes-layout {
+        grid-template-columns: 240px 1fr;
+        gap: 1.25rem;
+      }
+
+      #notesGrid.notes-grid--browse {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .notes-browse-page .page-header--compact h1 {
+        font-size: 1.375rem;
+      }
+
+      .notes-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-sidebar {
+        position: sticky;
+        top: calc(var(--header-height) + 0.5rem);
+        max-height: none;
+        z-index: 10;
+      }
+
+      .notes-header-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .notes-browse-page #sortNotes {
+        width: 100%;
+      }
+
+      #notesGrid.notes-grid--browse {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .notes-browse-page.main-content {
+        padding-top: calc(var(--header-height) + 0.75rem);
+      }
+
+      .notes-browse-page .page-header--compact {
+        padding: 1rem 1.125rem;
+      }
+
+      .quick-filter-chips__label {
+        width: 100%;
+        margin-bottom: 0.125rem;
+      }
+
+      .browse-note-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container navbar-wrapper"></div>
+  </header>
+
+  <main class="main-content notes-browse-page">
+    <div class="container">
+
+      <div class="page-header page-header--compact animate-slide-up">
+        <h1>Lecture Notes Directory</h1>
+        <p>Explore resources shared by students and verified by teachers across semesters.</p>
+      </div>
+
+      <div class="notes-toolbar animate-slide-up">
+        <div class="search-wrapper">
+          <input type="text" id="notesSearch" class="search-input" placeholder="Search by title, subject, semester, or description…">
+          <i data-lucide="search" class="search-icon"></i>
+        </div>
+
+        <div class="quick-filter-chips" id="quickFilterChips" role="group" aria-label="Quick filters">
+          <span class="quick-filter-chips__label">Quick:</span>
+          <button type="button" class="filter-chip" data-semester="Semester 4">Semester 4</button>
+          <button type="button" class="filter-chip" data-semester="Semester 5">Semester 5</button>
+          <button type="button" class="filter-chip" data-semester="Semester 6">Semester 6</button>
+          <button type="button" class="filter-chip" data-file-type="pdf">PDF</button>
+          <button type="button" class="filter-chip" data-file-type="docx">DOCX</button>
+        </div>
+      </div>
+
+      <div class="notes-layout">
+
+        <aside class="filter-sidebar animate-slide-up">
+          <div class="filter-sidebar__head">
+            <h2>Filters</h2>
+            <button type="button" id="clearFiltersBtn" class="btn btn-sm btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+              Clear All
+            </button>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-group-title">
+              <i data-lucide="book-open" style="width: 14px; height: 14px;"></i>
+              Semester
+            </div>
+            <select id="filterSemester" class="form-control">
+              <option value="all">All Semesters</option>
+              <option value="Semester 1">Semester 1</option>
+              <option value="Semester 2">Semester 2</option>
+              <option value="Semester 3">Semester 3</option>
+              <option value="Semester 4">Semester 4</option>
+              <option value="Semester 5">Semester 5</option>
+              <option value="Semester 6">Semester 6</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-group-title">
+              <i data-lucide="book-open-check" style="width: 14px; height: 14px;"></i>
+              Subject
+            </div>
+            <select id="filterSubject" class="form-control">
+              <option value="all">All Subjects</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <div class="filter-group-title">
+              <i data-lucide="file" style="width: 14px; height: 14px;"></i>
+              File Type
+            </div>
+            <select id="filterFileType" class="form-control">
+              <option value="all">All Formats</option>
+              <option value="pdf">PDF (.pdf)</option>
+              <option value="docx">Word (.docx)</option>
+              <option value="pptx">PowerPoint (.pptx)</option>
+            </select>
+          </div>
+        </aside>
+
+        <div class="notes-results-panel">
+          <div class="notes-header-bar">
+            <div class="notes-count-text">
+              Showing <strong id="notesCount">0</strong> notes
+            </div>
+            <select id="sortNotes" class="form-control" aria-label="Sort notes">
+              <option value="newest">Newest First</option>
+              <option value="downloads">Most Downloaded</option>
+              <option value="alphabetical">Title (A-Z)</option>
+            </select>
+          </div>
+
+          <div id="notesGrid" class="notes-grid--browse"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Note preview modal (UI only) -->
+  <div id="noteViewModal" class="note-view-modal" role="dialog" aria-modal="true" aria-labelledby="noteViewTitle">
+    <div class="note-view-modal__backdrop" id="noteViewBackdrop"></div>
+    <div class="note-view-modal__dialog animate-slide-up">
+      <button type="button" class="btn btn-sm btn-secondary note-view-modal__close" id="noteViewClose" aria-label="Close">
+        <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+      </button>
+      <div id="noteViewTags" class="note-tags" style="margin-bottom: 0.75rem;"></div>
+      <h2 id="noteViewTitle" style="font-size: 1.25rem; font-weight: 800; color: var(--secondary); margin-bottom: 0.5rem; padding-right: 2rem;"></h2>
+      <p id="noteViewDescription" style="color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; margin-bottom: 1rem;"></p>
+      <div id="noteViewMeta" style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.35rem;"></div>
+      <button type="button" class="btn btn-primary btn-full" id="noteViewDownload">
+        <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+        Download Note
+      </button>
+    </div>
+  </div>
+
+  <footer class="modern-footer">
+    <div class="container">
+      <div class="modern-footer-content">
+        <a href="index.html" class="modern-footer-logo">
+          <i data-lucide="graduation-cap" style="width: 32px; height: 32px; stroke-width: 2.5; color: var(--primary);"></i>
+          StudyHub<span style="color: var(--primary);">.</span>
+        </a>
+        <ul class="modern-footer-links">
+          <li><a href="index.html" class="modern-footer-link">Home</a></li>
+          <li><a href="notes.html" class="modern-footer-link">Browse Notes</a></li>
+          <li><a href="upload.html" class="modern-footer-link" id="footerUploadLink">Upload</a></li>
+          <li><a href="contact.html" class="modern-footer-link">Contact</a></li>
+        </ul>
+        <div class="modern-footer-divider"></div>
+        <div class="modern-footer-bottom">
+          <p>StudyHub &copy; 2026 | Made for Students</p>
+          <p>No Backend Demo. All information stored in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const notesSearch = document.getElementById('notesSearch');
+      const filterSemester = document.getElementById('filterSemester');
+      const filterSubject = document.getElementById('filterSubject');
+      const filterFileType = document.getElementById('filterFileType');
+      const sortNotes = document.getElementById('sortNotes');
+      const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+      const notesCount = document.getElementById('notesCount');
+      const notesGrid = document.getElementById('notesGrid');
+      const filterChips = document.querySelectorAll('.filter-chip');
+      const noteViewModal = document.getElementById('noteViewModal');
+      const noteViewBackdrop = document.getElementById('noteViewBackdrop');
+      const noteViewClose = document.getElementById('noteViewClose');
+      const noteViewDownload = document.getElementById('noteViewDownload');
+      let activeViewNoteId = null;
+
+      populateSubjects('all');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const querySem = urlParams.get('sem');
+      if (querySem) {
+        const semMap = {
+          '1': 'Semester 1', '2': 'Semester 2', '3': 'Semester 3',
+          '4': 'Semester 4', '5': 'Semester 5', '6': 'Semester 6'
+        };
+        if (semMap[querySem]) {
+          filterSemester.value = semMap[querySem];
+          populateSubjects(semMap[querySem]);
+        }
+      }
+
+      renderNotes();
+      syncChipStates();
+
+      notesSearch.addEventListener('input', () => { renderNotes(); syncChipStates(); });
+      filterSemester.addEventListener('change', () => {
+        populateSubjects(filterSemester.value);
+        renderNotes();
+        syncChipStates();
+      });
+      filterSubject.addEventListener('change', () => { renderNotes(); syncChipStates(); });
+      filterFileType.addEventListener('change', () => { renderNotes(); syncChipStates(); });
+      sortNotes.addEventListener('change', renderNotes);
+
+      clearFiltersBtn.addEventListener('click', () => {
+        notesSearch.value = '';
+        filterSemester.value = 'all';
+        populateSubjects('all');
+        filterSubject.value = 'all';
+        filterFileType.value = 'all';
+        sortNotes.value = 'newest';
+        renderNotes();
+        syncChipStates();
+        showToast('Filters cleared!', 'success');
+      });
+
+      filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          const sem = chip.dataset.semester;
+          const type = chip.dataset.fileType;
+          if (sem) {
+            filterSemester.value = filterSemester.value === sem ? 'all' : sem;
+            populateSubjects(filterSemester.value);
+          }
+          if (type) {
+            filterFileType.value = filterFileType.value === type ? 'all' : type;
+          }
+          renderNotes();
+          syncChipStates();
+        });
+      });
+
+      noteViewBackdrop.addEventListener('click', closeNoteView);
+      noteViewClose.addEventListener('click', closeNoteView);
+      noteViewDownload.addEventListener('click', () => {
+        if (activeViewNoteId) {
+          closeNoteView();
+          handleDownload(activeViewNoteId);
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeNoteView();
+      });
+
+      function syncChipStates() {
+        filterChips.forEach(chip => {
+          const sem = chip.dataset.semester;
+          const type = chip.dataset.fileType;
+          let active = false;
+          if (sem) active = filterSemester.value === sem;
+          if (type) active = filterFileType.value === type;
+          chip.classList.toggle('active', active);
+        });
+      }
+
+      function populateSubjects(semesterVal) {
+        filterSubject.innerHTML = '<option value="all">All Subjects</option>';
+        if (semesterVal === 'all') {
+          const allSubjects = [];
+          Object.values(COURSE_SUBJECTS).forEach(subList => {
+            subList.forEach(sub => {
+              if (!allSubjects.includes(sub)) allSubjects.push(sub);
+            });
+          });
+          allSubjects.sort().forEach(sub => {
+            filterSubject.innerHTML += `<option value="${sub}">${sub}</option>`;
+          });
+        } else {
+          (COURSE_SUBJECTS[semesterVal] || []).forEach(sub => {
+            filterSubject.innerHTML += `<option value="${sub}">${sub}</option>`;
+          });
+        }
+      }
+
+      function renderNotes() {
+        const approvedNotes = getAllNotes().filter(n => n.status === 'approved');
+        const searchQuery = notesSearch.value.toLowerCase().trim();
+        const semesterFilter = filterSemester.value;
+        const subjectFilter = filterSubject.value;
+        const fileTypeFilter = filterFileType.value;
+        const sortVal = sortNotes.value;
+
+        if (approvedNotes.length === 0) {
+          notesCount.innerText = '0';
+          notesGrid.innerHTML = `
+            <div class="notes-empty-state">
+              <i data-lucide="inbox" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
+              <p style="font-weight: 700; color: var(--secondary); font-size: 1.0625rem;">No notes uploaded yet. Be the first to upload notes.</p>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        let filteredNotes = approvedNotes.filter(note => {
+          const matchesSearch = note.title.toLowerCase().includes(searchQuery) ||
+            note.subject.toLowerCase().includes(searchQuery) ||
+            note.description.toLowerCase().includes(searchQuery);
+          const matchesSemester = semesterFilter === 'all' || note.semester === semesterFilter;
+          const matchesSubject = subjectFilter === 'all' || note.subject === subjectFilter;
+          const matchesFileType = fileTypeFilter === 'all' || note.fileType === fileTypeFilter;
+          return matchesSearch && matchesSemester && matchesSubject && matchesFileType;
+        });
+
+        if (sortVal === 'newest') {
+          filteredNotes.sort((a, b) => new Date(b.dateUploaded) - new Date(a.dateUploaded));
+        } else if (sortVal === 'downloads') {
+          filteredNotes.sort((a, b) => b.downloadCount - a.downloadCount);
+        } else if (sortVal === 'alphabetical') {
+          filteredNotes.sort((a, b) => a.title.localeCompare(b.title));
+        }
+
+        notesCount.innerText = filteredNotes.length;
+
+        if (filteredNotes.length === 0) {
+          notesGrid.innerHTML = `
+            <div class="notes-empty-state">
+              <i data-lucide="search-x" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
+              <h3 style="font-weight: 700; color: var(--secondary); font-size: 1.0625rem;">No Notes Found</h3>
+              <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem;">Try adjusting your keywords or clearing the filters.</p>
+            </div>
+          `;
+          if (window.lucide) window.lucide.createIcons();
+          return;
+        }
+
+        notesGrid.innerHTML = filteredNotes.map(note => `
+          <article class="card note-card browse-note-card animate-slide-up">
+            <div class="card-body">
+              <div class="note-tags">
+                <span class="tag tag-sem">${note.semester}</span>
+                <span class="tag tag-subject">${note.subject}</span>
+                <span class="tag tag-file">${note.fileType.toUpperCase()}</span>
+              </div>
+              <h3 class="card-title">${note.title}</h3>
+              <p class="card-text">${note.description}</p>
+              <div class="note-meta">
+                <span class="note-uploader">
+                  <i data-lucide="user" style="width: 12px; height: 12px;"></i>
+                  By ${note.uploaderName}
+                </span>
+                <span class="note-downloads">
+                  <i data-lucide="download" style="width: 12px; height: 12px;"></i>
+                  ${note.downloadCount || 0} downloads
+                </span>
+              </div>
+              <div class="browse-note-actions">
+                <button type="button" class="btn browse-btn-download" onclick="handleDownload('${note.id}')">
+                  <i data-lucide="download" style="width: 15px; height: 15px;"></i>
+                  Download
+                </button>
+                <button type="button" class="btn browse-btn-view" onclick="handleViewNote('${note.id}')">
+                  <i data-lucide="eye" style="width: 15px; height: 15px;"></i>
+                  View
+                </button>
+                <button type="button" class="btn browse-btn-delete" onclick="handleDeleteNote('${note.id}')">
+                  <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </article>
+        `).join('');
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      window.handleDeleteNote = function(noteId) {
+        if (!confirm('Are you sure you want to delete this note?')) return;
+
+        const success = deleteNote(noteId);
+        if (success) {
+          if (activeViewNoteId === noteId) closeNoteView();
+          showToast('Note deleted successfully.', 'success');
+          renderNotes();
+        } else {
+          showToast('Failed to delete note.', 'danger');
+        }
+      };
+
+      window.handleDownload = function(noteId) {
+        const result = downloadNoteFile(noteId);
+        if (result === 'not_logged_in') {
+          showToast('Please log in first to download notes', 'warning');
+          setTimeout(() => {
+            window.location.href = 'login.html?redirect=notes.html';
+          }, 1200);
+        } else if (result === 'success') {
+          showToast('Download started successfully!', 'success');
+          renderNotes();
+        } else {
+          showToast('Failed to download file', 'danger');
+        }
+      };
+
+      window.handleViewNote = function(noteId) {
+        const notes = getAllNotes();
+        const note = notes.find(n => n.id === noteId);
+        if (!note) return;
+
+        activeViewNoteId = noteId;
+        document.getElementById('noteViewTitle').textContent = note.title;
+        document.getElementById('noteViewDescription').textContent = note.description;
+        document.getElementById('noteViewTags').innerHTML = `
+          <span class="tag tag-sem">${note.semester}</span>
+          <span class="tag tag-subject">${note.subject}</span>
+          <span class="tag tag-file">${note.fileType.toUpperCase()}</span>
+        `;
+        document.getElementById('noteViewMeta').innerHTML = `
+          <span><strong>Uploader:</strong> ${note.uploaderName}</span>
+          <span><strong>File size:</strong> ${note.fileSize}</span>
+          <span><strong>Downloads:</strong> ${note.downloadCount || 0}</span>
+        `;
+        noteViewModal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        if (window.lucide) window.lucide.createIcons();
+      };
+
+      function closeNoteView() {
+        noteViewModal.classList.remove('is-open');
+        document.body.style.overflow = '';
+        activeViewNoteId = null;
+      }
+    });
+  </script>
+</body>
+</html>

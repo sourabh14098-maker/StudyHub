@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard - StudyHub</title>
+  <meta name="description" content="View your uploaded files, pending reviews, and download logs. Manage your StudyHub academic profile.">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+    }
+
+    .profile-card {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      height: fit-content;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem auto;
+      font-size: 2.25rem;
+      font-weight: 800;
+    }
+
+    .dashboard-tabs {
+      display: flex;
+      gap: 1rem;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .dash-tab-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .dash-tab-btn:hover {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+
+    .dash-tab-btn.active {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+
+    .stat-card {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar Header -->
+  <header>
+    <div class="container navbar-wrapper">
+      <!-- Generated dynamically in main.js -->
+    </div>
+  </header>
+
+  <!-- Guarded Authentication Verification -->
+  <script src="js/auth.js"></script>
+  <script>
+    guardPage();
+  </script>
+
+  <!-- Main Dashboard Section -->
+  <main class="main-content">
+    <div class="container">
+      
+      <!-- Grid Layout: Sidebar Profile Info + Central Workspaces -->
+      <div class="dashboard-grid">
+        
+        <!-- Sidebar Profile -->
+        <aside class="profile-card animate-slide-up">
+          <div class="profile-avatar" id="avatarLetter">S</div>
+          <h2 id="profileUsername" style="font-weight: 800; color: var(--secondary); font-size: 1.35rem; margin-bottom: 0.25rem;">Student Name</h2>
+          <p id="profileEmail" style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">student@email.com</p>
+          
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem; text-align: left;">
+            <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.75rem;">Account Actions</div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <a href="upload.html" class="btn btn-primary btn-full btn-sm">
+                <i data-lucide="upload" style="width: 16px; height: 16px;"></i>
+                Upload Notes
+              </a>
+              <a href="notes.html" class="btn btn-outline btn-full btn-sm">
+                <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+                Search Notes
+              </a>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Content Workspaces -->
+        <section class="animate-slide-up" style="animation-delay: 0.1s;">
+          
+          <!-- Statistics Cards Grid -->
+          <div class="grid-3 mb-3">
+            <div class="stat-card">
+              <div class="stat-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <i data-lucide="upload-cloud" style="width: 24px; height: 24px;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Uploaded Notes</div>
+                <div id="statUploadsCount" style="font-size: 1.75rem; font-weight: 800; color: var(--secondary);">0</div>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon" style="background-color: var(--success-light); color: var(--success);">
+                <i data-lucide="check-circle" style="width: 24px; height: 24px;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Approved Notes</div>
+                <div id="statApprovedCount" style="font-size: 1.75rem; font-weight: 800; color: var(--secondary);">0</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background-color: var(--warning-light); color: var(--warning);">
+                <i data-lucide="download" style="width: 24px; height: 24px;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Downloaded Files</div>
+                <div id="statDownloadsCount" style="font-size: 1.75rem; font-weight: 800; color: var(--secondary);">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Tabs -->
+          <div class="dashboard-tabs">
+            <button id="tabMyUploads" class="dash-tab-btn active">My Uploaded Notes</button>
+            <button id="tabMyDownloads" class="dash-tab-btn">Downloads Log</button>
+          </div>
+
+          <!-- Tab Content 1: Uploads -->
+          <div id="uploadsSection" class="tab-content">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th>Date Uploaded</th>
+                    <th>Downloads</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="uploadsTableBody">
+                  <!-- Generated dynamically in JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab Content 2: Downloads -->
+          <div id="downloadsSection" class="tab-content" style="display: none;">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th>Size</th>
+                    <th>Format</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="downloadsTableBody">
+                  <!-- Generated dynamically in JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="modern-footer">
+    <div class="container">
+      <div class="modern-footer-content">
+        <a href="index.html" class="modern-footer-logo">
+          <i data-lucide="graduation-cap" style="width: 32px; height: 32px; stroke-width: 2.5; color: var(--primary);"></i>
+          StudyHub<span style="color: var(--primary);">.</span>
+        </a>
+        <ul class="modern-footer-links">
+          <li><a href="index.html" class="modern-footer-link">Home</a></li>
+          <li><a href="notes.html" class="modern-footer-link">Browse Notes</a></li>
+          <li><a href="upload.html" class="modern-footer-link" id="footerUploadLink">Upload</a></li>
+          <li><a href="contact.html" class="modern-footer-link">Contact</a></li>
+        </ul>
+        <div class="modern-footer-divider"></div>
+        <div class="modern-footer-bottom">
+          <p>StudyHub &copy; 2026 | Made for Students</p>
+          <p>No Backend Demo. All information stored in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/notes.js"></script>
+  <script src="js/main.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getCurrentUser();
+      
+      if (!user) return;
+
+      // Populate User details
+      document.getElementById('profileUsername').innerText = user.username;
+      document.getElementById('profileEmail').innerText = user.email;
+      document.getElementById('avatarLetter').innerText = user.username.charAt(0).toUpperCase();
+
+      // Tab components setup
+      const tabMyUploads = document.getElementById('tabMyUploads');
+      const tabMyDownloads = document.getElementById('tabMyDownloads');
+      const uploadsSection = document.getElementById('uploadsSection');
+      const downloadsSection = document.getElementById('downloadsSection');
+
+      tabMyUploads.addEventListener('click', () => {
+        tabMyUploads.classList.add('active');
+        tabMyDownloads.classList.remove('active');
+        uploadsSection.style.display = 'block';
+        downloadsSection.style.display = 'none';
+      });
+
+      tabMyDownloads.addEventListener('click', () => {
+        tabMyDownloads.classList.add('active');
+        tabMyUploads.classList.remove('active');
+        downloadsSection.style.display = 'block';
+        uploadsSection.style.display = 'none';
+      });
+
+      // Load Tables and stats
+      loadDashboardData();
+
+      function loadDashboardData() {
+        const notes = getAllNotes();
+        const userUploaded = notes.filter(n => n.uploaderId === user.id);
+        const userApproved = userUploaded.filter(n => n.status === 'approved');
+        const downloadedNotes = getUserDownloads(user.id);
+
+        // Stats counts
+        document.getElementById('statUploadsCount').innerText = userUploaded.length;
+        document.getElementById('statApprovedCount').innerText = userApproved.length;
+        document.getElementById('statDownloadsCount').innerText = downloadedNotes.length;
+
+        // 1. Render Uploaded Notes
+        const uploadsTableBody = document.getElementById('uploadsTableBody');
+        if (userUploaded.length === 0) {
+          uploadsTableBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                You haven't uploaded any study materials yet.
+              </td>
+            </tr>
+          `;
+        } else {
+          uploadsTableBody.innerHTML = userUploaded.map(note => {
+            let statusBadge = '';
+            if (note.status === 'approved') {
+              statusBadge = '<span class="badge badge-approved">Approved</span>';
+            } else if (note.status === 'pending') {
+              statusBadge = '<span class="badge badge-pending">Pending</span>';
+            } else {
+              statusBadge = '<span class="badge badge-rejected">Rejected</span>';
+            }
+
+            const uploadDate = new Date(note.dateUploaded).toLocaleDateString('en-US', {
+              year: 'numeric', month: 'short', day: 'numeric'
+            });
+
+            return `
+              <tr>
+                <td style="font-weight: 700; color: var(--secondary);">${note.title}</td>
+                <td>${note.subject}</td>
+                <td>${note.semester}</td>
+                <td>${uploadDate}</td>
+                <td>${note.downloadCount || 0}</td>
+                <td>${statusBadge}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline" style="border-color: var(--danger); color: var(--danger); padding: 0.25rem 0.5rem;" onclick="handleDelete('${note.id}')">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        // 2. Render Downloaded Notes
+        const downloadsTableBody = document.getElementById('downloadsTableBody');
+        if (downloadedNotes.length === 0) {
+          downloadsTableBody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                No downloads logs found. Discover notes inside the browse directory!
+              </td>
+            </tr>
+          `;
+        } else {
+          downloadsTableBody.innerHTML = downloadedNotes.map(note => {
+            return `
+              <tr>
+                <td style="font-weight: 700; color: var(--secondary);">${note.title}</td>
+                <td>${note.subject}</td>
+                <td>${note.semester}</td>
+                <td>${note.fileSize}</td>
+                <td><span class="tag tag-file" style="margin-bottom:0;">${note.fileType.toUpperCase()}</span></td>
+                <td>
+                  <button class="btn btn-sm btn-secondary" onclick="handleRedownload('${note.id}')">
+                    <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                    Download
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }
+
+      // Actions hook: Delete
+      window.handleDelete = function(noteId) {
+        if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
+          const success = deleteNote(noteId);
+          if (success) {
+            showToast('Note deleted successfully!', 'success');
+            loadDashboardData();
+          } else {
+            showToast('Failed to delete note', 'danger');
+          }
+        }
+      };
+
+      // Actions hook: Redownload
+      window.handleRedownload = function(noteId) {
+        const success = downloadNoteFile(noteId);
+        if (success) {
+          showToast('Downloading note again...', 'success');
+          loadDashboardData();
+        } else {
+          showToast('Failed to download note', 'danger');
+        }
+      };
+    });
+  </script>
+</body>
+</html>

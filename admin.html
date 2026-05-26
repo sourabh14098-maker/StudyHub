@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - StudyHub Coordinator</title>
+  <meta name="description"
+    content="Moderator dashboard for StudyHub. Manage pending student uploads, view active notes, and oversee user registries.">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+    }
+
+    .admin-menu-sidebar {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1rem;
+      box-shadow: var(--shadow-sm);
+      height: fit-content;
+      position: sticky;
+      top: calc(var(--header-height) + 1rem);
+    }
+
+    .admin-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-bottom: 0.25rem;
+      transition: all var(--transition-fast);
+    }
+
+    .admin-menu-item:hover,
+    .admin-menu-item.active {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+
+    .stat-box {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-box-info h3 {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-box-info div {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--secondary);
+    }
+
+    .stat-box-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (max-width: 992px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-menu-sidebar {
+        position: relative;
+        top: 0;
+        margin-bottom: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navbar Header -->
+  <header>
+    <div class="container navbar-wrapper">
+      <!-- Generated dynamically in main.js -->
+    </div>
+  </header>
+
+  <!-- Admin Protection Guard -->
+  <script src="js/auth.js"></script>
+  <script>
+    // Guard page: Only allow admin
+    guardPage(['admin']);
+  </script>
+
+  <!-- Admin Panel Content -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- Layout Grid: Menu Sidebar + Work Area -->
+      <div class="admin-grid">
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-menu-sidebar animate-slide-up">
+          <div
+            style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; padding: 0 1rem 0.5rem 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.75rem;">
+            Management Menu
+          </div>
+          <nav>
+            <div id="btnPending" class="admin-menu-item active">
+              <i data-lucide="clock" style="width: 18px; height: 18px;"></i>
+              Pending Reviews
+              <span id="pendingBadgeCount"
+                style="margin-left: auto; font-size: 0.75rem; background: var(--warning); color: white; padding: 0.125rem 0.5rem; border-radius: var(--radius-full); font-weight: 700; display: none;">0</span>
+            </div>
+            <div id="btnAllNotes" class="admin-menu-item">
+              <i data-lucide="file-text" style="width: 18px; height: 18px;"></i>
+              Active Notes
+            </div>
+            <div id="btnUsers" class="admin-menu-item">
+              <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+              User Directory
+            </div>
+          </nav>
+        </aside>
+
+        <!-- Main Work Area -->
+        <section class="animate-slide-up" style="animation-delay: 0.1s;">
+
+          <!-- Statistics Row -->
+          <div class="grid-3 mb-3">
+
+            <div class="stat-box">
+              <div class="stat-box-info">
+                <h3>Total Notes</h3>
+                <div id="adminStatNotes">0</div>
+              </div>
+              <div class="stat-box-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <i data-lucide="file-check-2" style="width: 24px; height: 24px;"></i>
+              </div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-box-info">
+                <h3>Pending Reviews</h3>
+                <div id="adminStatPending">0</div>
+              </div>
+              <div class="stat-box-icon" style="background-color: var(--warning-light); color: var(--warning);">
+                <i data-lucide="clock" style="width: 24px; height: 24px;"></i>
+              </div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-box-info">
+                <h3>Registered Users</h3>
+                <div id="adminStatUsers">0</div>
+              </div>
+              <div class="stat-box-icon" style="background-color: var(--success-light); color: var(--success);">
+                <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Section Panels -->
+
+          <!-- Panel 1: Pending Reviews -->
+          <div id="panelPending" class="admin-panel">
+            <h2 class="mb-2" style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">Pending Approvals
+            </h2>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th>Uploader</th>
+                    <th>Size</th>
+                    <th>Format</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tablePendingBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Panel 2: Active Notes Directory -->
+          <div id="panelAllNotes" class="admin-panel" style="display: none;">
+            <h2 class="mb-2" style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">Active Notes
+              Directory</h2>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Semester</th>
+                    <th>Uploader</th>
+                    <th>Downloads</th>
+                    <th>Format</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tableAllNotesBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Panel 3: User Directory -->
+          <div id="panelUsers" class="admin-panel" style="display: none;">
+            <h2 class="mb-2" style="font-size: 1.5rem; font-weight: 800; color: var(--secondary);">User Directory</h2>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>Role</th>
+                  </tr>
+                </thead>
+                <tbody id="tableUsersBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="modern-footer">
+    <div class="container">
+      <div class="modern-footer-content">
+        <a href="index.html" class="modern-footer-logo">
+          <i data-lucide="graduation-cap"
+            style="width: 32px; height: 32px; stroke-width: 2.5; color: var(--primary);"></i>
+          StudyHub<span style="color: var(--primary);">.</span>
+        </a>
+        <ul class="modern-footer-links">
+          <li><a href="index.html" class="modern-footer-link">Home</a></li>
+          <li><a href="notes.html" class="modern-footer-link">Browse Notes</a></li>
+          <li><a href="upload.html" class="modern-footer-link" id="footerUploadLink">Upload</a></li>
+          <li><a href="contact.html" class="modern-footer-link">Contact</a></li>
+        </ul>
+        <div class="modern-footer-divider"></div>
+        <div class="modern-footer-bottom">
+          <p>StudyHub &copy; 2026 | Made for Students</p>
+          <p>No Backend Demo. All information stored in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/notes.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Menu Items
+      const btnPending = document.getElementById('btnPending');
+      const btnAllNotes = document.getElementById('btnAllNotes');
+      const btnUsers = document.getElementById('btnUsers');
+
+      // Panels
+      const panelPending = document.getElementById('panelPending');
+      const panelAllNotes = document.getElementById('panelAllNotes');
+      const panelUsers = document.getElementById('panelUsers');
+
+      // Helper to swap panels
+      function showPanel(target) {
+        // Reset navigation styles
+        btnPending.classList.remove('active');
+        btnAllNotes.classList.remove('active');
+        btnUsers.classList.remove('active');
+
+        // Hide all panels
+        panelPending.style.display = 'none';
+        panelAllNotes.style.display = 'none';
+        panelUsers.style.display = 'none';
+
+        if (target === 'pending') {
+          btnPending.classList.add('active');
+          panelPending.style.display = 'block';
+        } else if (target === 'allnotes') {
+          btnAllNotes.classList.add('active');
+          panelAllNotes.style.display = 'block';
+        } else if (target === 'users') {
+          btnUsers.classList.add('active');
+          panelUsers.style.display = 'block';
+        }
+      }
+
+      btnPending.addEventListener('click', () => showPanel('pending'));
+      btnAllNotes.addEventListener('click', () => showPanel('allnotes'));
+      btnUsers.addEventListener('click', () => showPanel('users'));
+
+      // Initial load
+      loadAdminDashboard();
+
+      function loadAdminDashboard() {
+        const notes = getAllNotes();
+        const pendingNotes = notes.filter(n => n.status === 'pending');
+        const approvedNotes = notes.filter(n => n.status === 'approved');
+        const users = getUsers();
+
+        // 1. Update stats row
+        document.getElementById('adminStatNotes').innerText = approvedNotes.length;
+        document.getElementById('adminStatPending').innerText = pendingNotes.length;
+        document.getElementById('adminStatUsers').innerText = users.length;
+
+        // Pending badge sidebar update
+        const pendingBadge = document.getElementById('pendingBadgeCount');
+        if (pendingNotes.length > 0) {
+          pendingBadge.style.display = 'inline-block';
+          pendingBadge.innerText = pendingNotes.length;
+        } else {
+          pendingBadge.style.display = 'none';
+        }
+
+        // 2. Render Pending Table
+        const tablePendingBody = document.getElementById('tablePendingBody');
+        if (pendingNotes.length === 0) {
+          tablePendingBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                No pending note submissions for review.
+              </td>
+            </tr>
+          `;
+        } else {
+          tablePendingBody.innerHTML = pendingNotes.map(note => `
+            <tr>
+              <td style="font-weight: 700; color: var(--secondary); max-width: 200px;">
+                <span title="${note.description}">${note.title}</span>
+              </td>
+              <td>${note.subject}</td>
+              <td>${note.semester}</td>
+              <td>${note.uploaderName}</td>
+              <td>${note.fileSize}</td>
+              <td><span class="tag tag-file" style="margin: 0;">${note.fileType.toUpperCase()}</span></td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn btn-sm btn-success" style="padding: 0.35rem 0.6rem; font-size: 0.75rem;" onclick="handleApprove('${note.id}')">
+                    <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                    Approve
+                  </button>
+                  <button class="btn btn-sm btn-outline" style="border-color: var(--danger); color: var(--danger); padding: 0.35rem 0.6rem; font-size: 0.75rem;" onclick="handleReject('${note.id}')">
+                    <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                    Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        // 3. Render Approved Table
+        const tableAllNotesBody = document.getElementById('tableAllNotesBody');
+        if (approvedNotes.length === 0) {
+          tableAllNotesBody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                No active notes found.
+              </td>
+            </tr>
+          `;
+        } else {
+          tableAllNotesBody.innerHTML = approvedNotes.map(note => `
+            <tr>
+              <td style="font-weight: 700; color: var(--secondary);">${note.title}</td>
+              <td>${note.subject}</td>
+              <td>${note.semester}</td>
+              <td>${note.uploaderName}</td>
+              <td>${note.downloadCount || 0}</td>
+              <td><span class="tag tag-file" style="margin:0;">${note.fileType.toUpperCase()}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline" style="border-color: var(--danger); color: var(--danger); padding: 0.25rem 0.5rem;" onclick="handleAdminDelete('${note.id}')">
+                  <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        // 4. Render User Directory
+        const tableUsersBody = document.getElementById('tableUsersBody');
+        tableUsersBody.innerHTML = users.map(u => `
+          <tr>
+            <td style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">${u.id}</td>
+            <td style="font-weight: 700; color: var(--secondary);">${u.username}</td>
+            <td>${u.email}</td>
+            <td>
+              <span class="badge ${u.role === 'admin' ? 'badge-approved' : 'badge-pending'}">
+                ${u.role === 'admin' ? 'Coordinator (Admin)' : 'Student'}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }
+
+      // Actions hook: Approve
+      window.handleApprove = function (noteId) {
+        const success = approveNote(noteId);
+        if (success) {
+          showToast('Note approved successfully!', 'success');
+          loadAdminDashboard();
+        } else {
+          showToast('Failed to approve note', 'danger');
+        }
+      };
+
+      // Actions hook: Reject/Delete pending
+      window.handleReject = function (noteId) {
+        if (confirm('Are you sure you want to reject and delete this submission?')) {
+          const success = deleteNote(noteId);
+          if (success) {
+            showToast('Note submission rejected and deleted.', 'warning');
+            loadAdminDashboard();
+          } else {
+            showToast('Failed to delete note', 'danger');
+          }
+        }
+      };
+
+      // Actions hook: Admin Delete approved
+      window.handleAdminDelete = function (noteId) {
+        if (confirm('Are you sure you want to moderate and delete this active note? It will be removed globally.')) {
+          const success = deleteNote(noteId);
+          if (success) {
+            showToast('Active note moderated and deleted successfully!', 'success');
+            loadAdminDashboard();
+          } else {
+            showToast('Failed to delete note', 'danger');
+          }
+        }
+      };
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyHub - Student Notes Sharing Platform</title>
+  <meta name="description" content="StudyHub helps college students upload, search, filter, and download study notes easily. Discover programming, databases, and mathematics notes.">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Hero section styles */
+    .hero-section {
+      padding: 6rem 0 4rem 0;
+      background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 10% 80%, rgba(15, 23, 42, 0.03) 0%, transparent 50%);
+      position: relative;
+    }
+    
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      line-height: 1.15;
+      font-weight: 800;
+      color: var(--secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 600px;
+    }
+
+    /* Stats strip */
+    .stats-strip {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-top: -2rem;
+      position: relative;
+      z-index: 10;
+      box-shadow: var(--shadow-lg);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .stat-number {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Section headings */
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 1.125rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-desc {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 2rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.75rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 2.25rem;
+      }
+      .stats-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar Header -->
+  <header>
+    <div class="container navbar-wrapper">
+      <!-- Generated dynamically in main.js -->
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" style="padding: 9rem 0 5rem 0;">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="animate-slide-up">
+          <div class="hero-badge">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+            Designed Exclusively for Students
+          </div>
+          <h1 class="hero-title">Your Ultimate Hub for <span>Study Notes</span></h1>
+          <p class="hero-desc">
+            Simplify your learning. Upload your lecture materials, search verified notes from other semesters, filter by subject, and download instantly for offline study.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;" class="hero-buttons">
+            <a href="notes.html" class="btn btn-primary">
+              <i data-lucide="search" style="width: 20px; height: 20px;"></i>
+              Browse Notes
+            </a>
+            <a href="upload.html" class="btn btn-outline" id="heroUploadLink">
+              <i data-lucide="upload" style="width: 20px; height: 20px;"></i>
+              Share Your Notes
+            </a>
+          </div>
+        </div>
+        
+        <div class="hero-illustration-wrapper animate-fade-in">
+          <!-- Floating cards -->
+          <div class="floating-card float-card-pdf">
+            <div class="floating-card-icon" style="background-color: #fee2e2; color: #ef4444;">
+              <i data-lucide="file-text" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div class="floating-card-content">
+              <div class="floating-card-title">PDF Notes</div>
+              <div class="floating-card-desc">Instant Download</div>
+            </div>
+          </div>
+          
+          <div class="floating-card float-card-verified">
+            <div class="floating-card-icon" style="background-color: var(--success-light); color: var(--success);">
+              <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div class="floating-card-content">
+              <div class="floating-card-title">Verified</div>
+              <div class="floating-card-desc">100% Quality</div>
+            </div>
+          </div>
+
+          <div class="floating-card float-card-semester">
+            <div class="floating-card-icon" style="background-color: var(--primary-light); color: var(--primary);">
+              <i data-lucide="graduation-cap" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div class="floating-card-content">
+              <div class="floating-card-title">Semester 6</div>
+              <div class="floating-card-desc">Active Materials</div>
+            </div>
+          </div>
+
+          <!-- SVG study graphic -->
+          <svg viewBox="0 0 500 500" class="hero-svg">
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#eff6ff;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#dbeafe;stop-opacity:1" />
+              </linearGradient>
+              <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <!-- Background circle -->
+            <circle cx="250" cy="250" r="200" fill="url(#grad1)" />
+            <!-- Book illustration -->
+            <rect x="150" y="160" width="200" height="240" rx="15" fill="#ffffff" stroke="#e2e8f0" stroke-width="6" />
+            <path d="M150,370 C200,370 250,385 250,400 C250,385 300,370 350,370" fill="none" stroke="#2563eb" stroke-width="6" />
+            <!-- Front lines -->
+            <line x1="180" y1="210" x2="320" y2="210" stroke="#0f172a" stroke-width="8" stroke-linecap="round" />
+            <line x1="180" y1="250" x2="300" y2="250" stroke="#64748b" stroke-width="6" stroke-linecap="round" />
+            <line x1="180" y1="290" x2="320" y2="290" stroke="#64748b" stroke-width="6" stroke-linecap="round" />
+            <line x1="180" y1="330" x2="270" y2="330" stroke="#64748b" stroke-width="6" stroke-linecap="round" />
+            <!-- Floating caps and charts -->
+            <circle cx="110" cy="180" r="30" fill="url(#grad2)" />
+            <path d="M95,180 L110,170 L125,180 L110,190 Z" fill="#ffffff" />
+            <path d="M110,190 L110,200 C110,202 105,205 100,202" fill="none" stroke="#ffffff" stroke-width="2" />
+            
+            <circle cx="380" cy="280" r="35" fill="var(--warning)" />
+            <!-- Star in circle -->
+            <path d="M380,265 L384,275 L395,275 L386,282 L390,293 L380,286 L370,293 L374,282 L365,275 L376,275 Z" fill="#ffffff" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics Panel -->
+  <section style="padding: 0 0 4rem 0;">
+    <div class="container">
+      <div class="stats-strip">
+        
+        <div class="stat-card-modern">
+          <div class="stat-icon-bubble" style="background-color: var(--primary-light); color: var(--primary);">
+            <i data-lucide="shield-check"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-number" id="statNotes">0</div>
+            <div class="stat-label">Verified Notes</div>
+          </div>
+        </div>
+
+        <div class="stat-card-modern">
+          <div class="stat-icon-bubble" style="background-color: var(--success-light); color: var(--success);">
+            <i data-lucide="download"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-number" id="statDownloads">0</div>
+            <div class="stat-label">Downloads</div>
+          </div>
+        </div>
+
+        <div class="stat-card-modern">
+          <div class="stat-icon-bubble" style="background-color: #fef3c7; color: var(--warning);">
+            <i data-lucide="book-open"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-number" id="statSemesters">6</div>
+            <div class="stat-label">Semesters</div>
+          </div>
+        </div>
+
+        <div class="stat-card-modern">
+          <div class="stat-icon-bubble" style="background-color: #fce7f3; color: #db2777;">
+            <i data-lucide="users"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-number" id="statStudents">0</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Why StudyHub? Section -->
+  <section class="why-section" style="border-bottom: 1px solid var(--border-color);">
+    <div class="container">
+      <div class="section-title">
+        <h2>Why StudyHub?</h2>
+        <p>Explore why thousands of students trust our platform for sharing lecture handbooks and exam prep guides.</p>
+      </div>
+      
+      <div class="why-grid animate-slide-up">
+        
+        <div class="why-card">
+          <div class="why-icon-container" style="background-color: var(--primary-light); color: var(--primary);">
+            <i data-lucide="upload-cloud" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 class="why-card-title">Upload Notes Easily</h3>
+          <p class="why-card-text">Drag and drop your PDFs, Word documents, or presentation slides. Share your knowledge and build a strong academic profile among peers.</p>
+        </div>
+
+        <div class="why-card">
+          <div class="why-icon-container" style="background-color: var(--success-light); color: var(--success);">
+            <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 class="why-card-title">Find Verified Notes</h3>
+          <p class="why-card-text">Rest easy knowing that student coordinators review all notes. Only top-tier, accurate, and relevant study materials make it to the feed.</p>
+        </div>
+
+        <div class="why-card">
+          <div class="why-icon-container" style="background-color: #fef3c7; color: var(--warning);">
+            <i data-lucide="download" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h3 class="why-card-title">Download Anytime</h3>
+          <p class="why-card-text">Need to study offline? Download mock question banks and notes directly to your phone or laptop with a single click, completely free.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section style="padding: 6rem 0; background-color: white;">
+    <div class="container">
+      <div class="section-title">
+        <h2>Features Designed for Students</h2>
+        <p>Everything you need to boost your academic grades in one clean, fast, and modern interface.</p>
+      </div>
+      
+      <div class="grid-4">
+        
+        <div class="card" style="padding: 1.5rem; text-align: center; border-radius: var(--radius-md);">
+          <div style="background-color: var(--primary-light); color: var(--primary); width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+            <i data-lucide="search" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="mb-1" style="font-size: 1.15rem; font-weight: 700; color: var(--secondary);">Smart Search</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">Instantly search notes using programming languages, DBMS topics, or algorithm keywords.</p>
+        </div>
+
+        <div class="card" style="padding: 1.5rem; text-align: center; border-radius: var(--radius-md);">
+          <div style="background-color: var(--warning-light); color: var(--warning); width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+            <i data-lucide="filter" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="mb-1" style="font-size: 1.15rem; font-weight: 700; color: var(--secondary);">Structured Filters</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">Quickly isolate notes based on your current semester (1st Sem to 6th Sem) and targeted subject.</p>
+        </div>
+
+        <div class="card" style="padding: 1.5rem; text-align: center; border-radius: var(--radius-md);">
+          <div style="background-color: var(--success-light); color: var(--success); width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+            <i data-lucide="download" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="mb-1" style="font-size: 1.15rem; font-weight: 700; color: var(--secondary);">1-Click Downloads</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">Fast download systems that store mock resources directly on your local device for exams review.</p>
+        </div>
+
+        <div class="card" style="padding: 1.5rem; text-align: center; border-radius: var(--radius-md);">
+          <div style="background-color: #fef2f2; color: var(--danger); width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+            <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="mb-1" style="font-size: 1.15rem; font-weight: 700; color: var(--secondary);">Admin Checked</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">All student uploads are reviewed and verified by coordinators before being made public.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Notes Section -->
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <div class="section-title">
+        <h2>Recent Uploads</h2>
+        <p>Stay ahead of your lectures by checking out the newest materials uploaded by top peers.</p>
+      </div>
+
+      <!-- Notes Grid -->
+      <div id="recentNotesGrid" class="grid-3 mb-3">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+      <div style="text-align: center;" class="mt-3">
+        <a href="notes.html" class="btn btn-outline">
+          View All Notes
+          <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section style="padding: 4rem 0;">
+    <div class="container">
+      <div class="card" style="background: linear-gradient(135deg, var(--secondary) 0%, #1e293b 100%); color: white; padding: 3.5rem 2rem; border-radius: var(--radius-lg); text-align: center; border: none;">
+        <h2 class="mb-2" style="font-size: 2.25rem; font-weight: 800;">Join the StudyHub Community Today</h2>
+        <p style="color: #cbd5e1; max-width: 600px; margin: 0 auto 2rem auto; font-size: 1.125rem;">
+          Get access to over 50+ subject manuals, track your download history, and contribute to the student community.
+        </p>
+        <div id="ctaButtons" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <!-- Dynamically customized via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modern Footer -->
+  <footer class="modern-footer">
+    <div class="container">
+      <div class="modern-footer-content">
+        <a href="index.html" class="modern-footer-logo">
+          <i data-lucide="graduation-cap" style="width: 32px; height: 32px; stroke-width: 2.5; color: var(--primary);"></i>
+          StudyHub<span style="color: var(--primary);">.</span>
+        </a>
+        <ul class="modern-footer-links">
+          <li><a href="index.html" class="modern-footer-link">Home</a></li>
+          <li><a href="notes.html" class="modern-footer-link">Browse Notes</a></li>
+          <li><a href="upload.html" class="modern-footer-link" id="footerUploadLink">Upload</a></li>
+          <li><a href="contact.html" class="modern-footer-link">Contact</a></li>
+        </ul>
+        <div class="modern-footer-divider"></div>
+        <div class="modern-footer-bottom">
+          <p>StudyHub &copy; 2026 | Made for Students</p>
+          <p>No Backend Demo. All information stored in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/notes.js"></script>
+  <script src="js/main.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      loadHomepageStats();
+      loadRecentNotes();
+      configureCTAButtons();
+      
+      // Hero share notes link guard
+      const shareLink = document.getElementById('heroUploadLink');
+      if (shareLink) {
+        shareLink.addEventListener('click', (e) => {
+          if (!getCurrentUser()) {
+            e.preventDefault();
+            showToast('Please log in first to upload notes', 'warning');
+            setTimeout(() => {
+              window.location.href = 'login.html?redirect=upload.html';
+            }, 1000);
+          }
+        });
+      }
+    });
+
+    // 1. Load counters
+    function loadHomepageStats() {
+      const notes = getAllNotes();
+      const approvedNotes = notes.filter(n => n.status === 'approved');
+      
+      // Calculate total downloads
+      const totalDownloads = approvedNotes.reduce((sum, item) => sum + (item.downloadCount || 0), 0);
+      
+      // Students count
+      const users = getUsers();
+      const students = users.filter(u => u.role === 'student').length;
+
+      document.getElementById('statNotes').innerText = approvedNotes.length;
+      document.getElementById('statDownloads').innerText = totalDownloads;
+      document.getElementById('statStudents').innerText = students;
+    }
+
+    // 2. Load top 3 recent notes
+    function loadRecentNotes() {
+      const notes = getAllNotes();
+      // Filter approved notes and sort by dateUploaded descending
+      const recentApproved = notes
+        .filter(n => n.status === 'approved')
+        .sort((a, b) => new Date(b.dateUploaded) - new Date(a.dateUploaded))
+        .slice(0, 3);
+
+      const grid = document.getElementById('recentNotesGrid');
+      
+      if (recentApproved.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No notes available.</div>`;
+        return;
+      }
+
+      grid.innerHTML = recentApproved.map(note => `
+        <div class="card note-card animate-slide-up">
+          <div class="card-body">
+            <div class="note-tags">
+              <span class="tag tag-sem">${note.semester}</span>
+              <span class="tag tag-subject">${note.subject}</span>
+              <span class="tag tag-file">${note.fileType.toUpperCase()}</span>
+            </div>
+            <h3 class="card-title">${note.title}</h3>
+            <p class="card-text">${note.description}</p>
+            <div class="note-meta">
+              <span class="note-uploader">
+                <i data-lucide="user" style="width: 12px; height: 12px;"></i>
+                By ${note.uploaderName}
+              </span>
+              <span class="note-downloads">
+                <i data-lucide="download" style="width: 12px; height: 12px;"></i>
+                ${note.downloadCount || 0} downloads
+              </span>
+            </div>
+            <button class="btn btn-secondary btn-full mt-2" onclick="handleDownload('${note.id}')">
+              <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+              Download (${note.fileSize})
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    // 3. Download helper
+    window.handleDownload = function(noteId) {
+      const result = downloadNoteFile(noteId);
+      if (result === 'not_logged_in') {
+        showToast('Please log in first to download notes', 'warning');
+        setTimeout(() => {
+          window.location.href = 'login.html?redirect=notes.html';
+        }, 1200);
+      } else if (result === 'success') {
+        showToast('Download started successfully!', 'success');
+        // Reload recent notes and counters to increment download counts
+        loadRecentNotes();
+        loadHomepageStats();
+      } else {
+        showToast('Failed to download file', 'danger');
+      }
+    };
+
+    // 4. CTA buttons config
+    function configureCTAButtons() {
+      const container = document.getElementById('ctaButtons');
+      if (!container) return;
+
+      const user = getCurrentUser();
+      if (user) {
+        container.innerHTML = `
+          <a href="dashboard.html" class="btn btn-primary" style="background-color: white; color: var(--secondary);">Go to Dashboard</a>
+          <a href="upload.html" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;">Upload a New Note</a>
+        `;
+      } else {
+        container.innerHTML = `
+          <a href="login.html?tab=signup" class="btn btn-primary" style="background-color: white; color: var(--secondary);">Create Free Account</a>
+          <a href="login.html" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;">Student Login</a>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
