@@ -10,6 +10,10 @@ const noteSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        semester: {
+            type: String,
+            required: true
+        },
         description: {
             type: String
         },
@@ -18,6 +22,22 @@ const noteSchema = new mongoose.Schema(
         },
         filePath: {
             type: String
+        },
+        fileType: {
+            type: String,
+            default: "pdf"
+        },
+        fileSize: {
+            type: String,
+            default: "2.4 MB"
+        },
+        downloadCount: {
+            type: Number,
+            default: 0
+        },
+        status: {
+            type: String,
+            default: "approved"
         },
         uploadedBy: {
             type: mongoose.Schema.Types.ObjectId,
