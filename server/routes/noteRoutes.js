@@ -106,6 +106,30 @@ router.get("/", async (req, res) => {
     }
 });
 
+// Download the physical note file by note id
+router.get("/file/:id", async (req, res) => {
+    try {
+        if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+            return res.status(404).json({ message: "File not found for this note" });
+        }
+
+        const note = await Note.findById(req.params.id);
+        if (!note || !note.fileName) {
+            return res.status(404).json({ message: "File not found for this note" });
+        }
+
+        const physicalPath = path.resolve(uploadDir, note.fileName);
+        if (!physicalPath.startsWith(path.resolve(uploadDir)) || !fs.existsSync(physicalPath)) {
+            return res.status(404).json({ message: "Uploaded file is missing on the server" });
+        }
+
+        res.download(physicalPath, note.fileName);
+    } catch (error) {
+        console.error("Download file failed:", error);
+        res.status(500).json({ message: "Failed to download file" });
+    }
+});
+
 // Delete note
 router.delete("/:id", authMiddleware, async (req, res) => {
     try {

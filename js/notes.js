@@ -1,6 +1,5 @@
-/* StudyHub - Notes Database Controller */
+/* StudyHub - Notes Database Controller (MongoDB Integrated) */
 
-// Semesters and Subjects Mapping
 const COURSE_SUBJECTS = {
   "Semester 1": ["Programming in C", "Computer Fundamentals", "Mathematical Foundations", "English Communication"],
   "Semester 2": ["Data Structures", "Digital Electronics", "Operating Systems", "Discrete Mathematics"],
@@ -10,163 +9,179 @@ const COURSE_SUBJECTS = {
   "Semester 6": ["Cloud Computing", "Information Security", "Mobile Applications", "AI & Machine Learning"]
 };
 
-const NOTES_STORAGE_VERSION = 'user-only-1';
-const LEGACY_SEED_NOTE_IDS = new Set([
-  'note_1', 'note_2', 'note_3', 'note_4', 'note_5', 'note_6', 'note_7', 'note_8'
-]);
+let cachedNotes = [];
+let cachedDownloads = [];
 
-// Initialize notes storage (user uploads only, no demo seed data)
-(function initNotesDB() {
-  const storedVersion = localStorage.getItem('sh_notes_version');
+function apiUrl(path) {
+  const baseUrl = window.location.protocol === "file:" ? "http://localhost:5000" : "";
+  return `${baseUrl}${path}`;
+}
 
-  if (storedVersion !== NOTES_STORAGE_VERSION) {
-    const existing = JSON.parse(localStorage.getItem('sh_notes') || '[]');
-    const userNotes = existing.filter(note => !LEGACY_SEED_NOTE_IDS.has(note.id));
-    localStorage.setItem('sh_notes', JSON.stringify(userNotes));
-    localStorage.setItem('sh_notes_version', NOTES_STORAGE_VERSION);
-  } else if (!localStorage.getItem('sh_notes')) {
-    localStorage.setItem('sh_notes', JSON.stringify([]));
+// Initialize and fetch notes from MongoDB backend
+async function loadNotesFromBackend() {
+  try {
+    const res = await fetch(apiUrl("/api/notes"));
+    if (!res.ok) throw new Error("Backend response error");
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      cachedNotes = data.map(n => ({
+        id: n._id,
+        title: n.title,
+        description: n.description || "",
+        subject: n.subject,
+        semester: n.semester || "Semester 1",
+        fileType: n.fileType || "pdf",
+        fileSize: n.fileSize || "2.4 MB",
+        uploaderName: n.uploadedBy ? (n.uploadedBy.name || "Student") : "Anonymous",
+        downloadCount: n.downloadCount || 0,
+        status: n.status || "approved",
+        fileName: n.fileName,
+        filePath: n.filePath
+      }));
+      console.log("🎒 Notes loaded from MongoDB Atlas:", cachedNotes.length);
+      // Dispatch event to notify components/pages to refresh the UI
+      document.dispatchEvent(new CustomEvent("notesLoaded"));
+    }
+  } catch (err) {
+    console.error("❌ Failed to load notes from MongoDB backend:", err);
   }
-})();
+}
 
-// Get all notes from localStorage (assign id to legacy notes missing one)
+// Fetch user's download history from MongoDB backend
+async function loadDownloadsHistoryFromBackend() {
+  try {
+    const token = localStorage.getItem('sh_token');
+    if (!token) return;
+    const res = await fetch(apiUrl("/api/notes/downloads/history"), {
+      headers: {
+        "Authorization": token ? `Bearer ${token}` : ""
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        cachedDownloads = data;
+        console.log("🎒 Download history loaded from MongoDB Atlas:", cachedDownloads.length);
+        document.dispatchEvent(new CustomEvent("downloadsLoaded"));
+      }
+    }
+  } catch (err) {
+    console.error("❌ Failed to load download history from MongoDB backend:", err);
+  }
+}
+
+// Initial load on page run
+loadNotesFromBackend();
+loadDownloadsHistoryFromBackend();
+
+// Get all cached notes from MongoDB
 function getAllNotes() {
-  const notes = JSON.parse(localStorage.getItem('sh_notes') || '[]');
-  let changed = false;
-  const normalized = notes.map((note, index) => {
-    if (note.id) return note;
-    changed = true;
-    return { ...note, id: 'note_' + Date.now() + '_' + index };
-  });
-  if (changed) saveNotes(normalized);
-  return normalized;
+  return cachedNotes;
 }
 
-// Save notes to localStorage
-function saveNotes(notes) {
-  localStorage.setItem('sh_notes', JSON.stringify(notes));
+// Real File upload helper
+async function uploadNoteToBackend(formData) {
+  try {
+    const token = localStorage.getItem('sh_token');
+    const res = await fetch(apiUrl("/api/notes/upload"), {
+      method: "POST",
+      headers: {
+        "Authorization": token ? `Bearer ${token}` : ""
+      },
+      body: formData
+    });
+    const result = await res.json();
+    if (res.ok) {
+      await loadNotesFromBackend(); // reload list
+      return { success: true, note: result.note };
+    } else {
+      return { success: false, error: result.message };
+    }
+  } catch (err) {
+    return { success: false, error: "Connection to server failed: " + err.message };
+  }
 }
 
-// Add a new note and persist to sh_notes (same key used by Browse Notes)
-function uploadNote(title, description, subject, semester, fileType, fileSize = '2.5 MB') {
-  const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
-  if (!user) return { success: false, error: 'User not logged in' };
-
-  const notes = getAllNotes();
-  const newNote = {
-    id: 'note_' + Date.now(),
-    title: title.trim(),
-    description: description.trim(),
-    subject: subject,
-    semester: semester,
-    fileType: (fileType || 'pdf').toLowerCase(),
-    fileSize: fileSize || '2.5 MB',
-    uploaderId: user.id,
-    uploaderName: user.username,
-    downloadCount: 0,
-    status: 'approved',
-    dateUploaded: new Date().toISOString()
-  };
-
-  notes.push(newNote);
-  saveNotes(notes);
-  return { success: true, note: newNote };
-}
-
-// Approve note
-function approveNote(noteId) {
-  const notes = getAllNotes();
-  const index = notes.findIndex(n => n.id === noteId);
-  if (index !== -1) {
-    notes[index].status = 'approved';
-    saveNotes(notes);
-    return true;
+// Delete note from MongoDB
+async function deleteNote(noteId) {
+  try {
+    const token = localStorage.getItem('sh_token');
+    const res = await fetch(apiUrl(`/api/notes/${noteId}`), {
+      method: "DELETE",
+      headers: {
+        "Authorization": token ? `Bearer ${token}` : ""
+      }
+    });
+    if (res.ok) {
+      cachedNotes = cachedNotes.filter(n => n.id !== noteId);
+      cachedDownloads = cachedDownloads.filter(n => n.id !== noteId);
+      return true;
+    }
+  } catch (err) {
+    console.error("❌ Failed to delete note:", err);
   }
   return false;
 }
 
-// Delete note from sh_notes (and remove from download history)
-function deleteNote(noteId) {
-  if (!noteId) return false;
-
-  const notes = getAllNotes();
-  const filtered = notes.filter(n => n.id !== noteId);
-  if (filtered.length === notes.length) return false;
-
-  saveNotes(filtered);
-
-  if (typeof getCurrentUser === 'function') {
-    const user = getCurrentUser();
-    if (user) {
-      const key = `sh_downloads_${user.id}`;
-      const downloads = JSON.parse(localStorage.getItem(key) || '[]').filter(id => id !== noteId);
-      localStorage.setItem(key, JSON.stringify(downloads));
-    }
-  }
-
-  return true;
-}
-
-// Record and download note (requires login)
-function downloadNoteFile(noteId) {
-  // Block download if user is not logged in
+// Record download count, save to MongoDB history, and trigger real file download directly in browser
+async function downloadNoteFile(noteId) {
   const user = getCurrentUser();
   if (!user) return 'not_logged_in';
 
   const notes = getAllNotes();
-  const index = notes.findIndex(n => n.id === noteId);
-  if (index === -1) return 'not_found';
+  const note = notes.find(n => n.id === noteId);
+  if (!note) return 'not_found';
+  if (!note.fileName) return 'file_missing';
 
-  const note = notes[index];
-  
-  // Increment download count
-  note.downloadCount += 1;
-  saveNotes(notes);
+  const downloadUrl = apiUrl(`/api/notes/file/${noteId}`);
 
-  // Save to user downloaded history
-  const key = `sh_downloads_${user.id}`;
-  let downloads = JSON.parse(localStorage.getItem(key) || '[]');
-  if (!downloads.includes(noteId)) {
-    downloads.push(noteId);
-    localStorage.setItem(key, JSON.stringify(downloads));
+  try {
+    const fileCheck = await fetch(downloadUrl, { method: "HEAD" });
+    if (!fileCheck.ok) return 'file_missing';
+  } catch (err) {
+    console.error("Failed to verify note file:", err);
+    return 'server_error';
   }
 
-  // Trigger a mock file download in browser
-  triggerMockDownload(note);
-  return 'success';
-}
-
-// Trigger browser file download (generates a text file pretending to be the note)
-function triggerMockDownload(note) {
-  const content = `StudyHub Note Download
-======================================
-Note Title: ${note.title}
-Subject: ${note.subject}
-Semester: ${note.semester}
-Uploader: ${note.uploaderName}
-File Size: ${note.fileSize}
-File Type: ${note.fileType.toUpperCase()}
-
-This is a mock study notes download from StudyHub.
-StudyHub is a frontend-only project created for students.
-Thank you for using StudyHub!`;
-
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `${note.title.replace(/\s+/g, '_')}.${note.fileType}`;
+  a.href = downloadUrl;
+  a.download = note.fileName;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+
+  recordDownloadInBackground(noteId, note);
+
+  return 'success';
 }
 
-// Get user download list
+// Record download count and save to MongoDB history without blocking the file download.
+async function recordDownloadInBackground(noteId, note) {
+  const token = localStorage.getItem('sh_token');
+  try {
+    const res = await fetch(apiUrl(`/api/notes/download/${noteId}`), { 
+      method: "POST",
+      headers: {
+        "Authorization": token ? `Bearer ${token}` : ""
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      note.downloadCount = data.downloadCount || (note.downloadCount + 1);
+      // Reload downloads log to refresh history lists in background
+      await loadDownloadsHistoryFromBackend();
+      document.dispatchEvent(new CustomEvent("notesLoaded"));
+    }
+  } catch (err) {
+    console.error("❌ Failed to update download count in database:", err);
+  }
+}
+
+async function addNoteToHistory(noteId) {
+  return downloadNoteFile(noteId);
+}
+
+// User downloads list helper from MongoDB Atlas cache
 function getUserDownloads(userId) {
-  const key = `sh_downloads_${userId}`;
-  const downloadIds = JSON.parse(localStorage.getItem(key) || '[]');
-  const notes = getAllNotes();
-  // Return the actual note objects that were downloaded
-  return notes.filter(n => downloadIds.includes(n.id));
+  return cachedDownloads;
 }

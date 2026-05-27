@@ -601,6 +601,10 @@
 
       renderNotes();
       syncChipStates();
+      document.addEventListener("notesLoaded", () => {
+        renderNotes();
+        syncChipStates();
+      });
 
       notesSearch.addEventListener('input', () => { renderNotes(); syncChipStates(); });
       filterSemester.addEventListener('change', () => {
@@ -775,10 +779,10 @@
         if (window.lucide) window.lucide.createIcons();
       }
 
-      window.handleDeleteNote = function(noteId) {
+      window.handleDeleteNote = async function(noteId) {
         if (!confirm('Are you sure you want to delete this note?')) return;
 
-        const success = deleteNote(noteId);
+        const success = await deleteNote(noteId);
         if (success) {
           if (activeViewNoteId === noteId) closeNoteView();
           showToast('Note deleted successfully.', 'success');
@@ -788,18 +792,21 @@
         }
       };
 
-      window.handleDownload = function(noteId) {
-        const result = downloadNoteFile(noteId);
+      window.handleDownload = async function(noteId) {
+        showToast('Preparing download...', 'success');
+        const result = await downloadNoteFile(noteId);
         if (result === 'not_logged_in') {
           showToast('Please log in first to download notes', 'warning');
           setTimeout(() => {
             window.location.href = 'login.html?redirect=notes.html';
           }, 1200);
         } else if (result === 'success') {
-          showToast('Download started successfully!', 'success');
+          showToast('Download started.', 'success');
           renderNotes();
+        } else if (result === 'file_missing') {
+          showToast('Uploaded file is missing on the server.', 'danger');
         } else {
-          showToast('Failed to download file', 'danger');
+          showToast('Failed to download note', 'danger');
         }
       };
 

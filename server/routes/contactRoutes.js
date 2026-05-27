@@ -18,6 +18,12 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (Contact.db.readyState !== 1) {
+      return res.status(503).json({
+        message: "MongoDB is not connected yet. Please check MongoDB Atlas access and try again."
+      });
+    }
+
     // 1. Save to MongoDB Database first
     const newContact = new Contact({
       name,
@@ -40,6 +46,9 @@ router.post("/", async (req, res) => {
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS

@@ -293,10 +293,12 @@
 
       // Load Tables and stats
       loadDashboardData();
+      document.addEventListener("notesLoaded", loadDashboardData);
+      document.addEventListener("downloadsLoaded", loadDashboardData);
 
       function loadDashboardData() {
         const notes = getAllNotes();
-        const userUploaded = notes.filter(n => n.uploaderId === user.id);
+        const userUploaded = notes; // Show all approved uploads from MongoDB
         const userApproved = userUploaded.filter(n => n.status === 'approved');
         const downloadedNotes = getUserDownloads(user.id);
 
@@ -326,7 +328,7 @@
               statusBadge = '<span class="badge badge-rejected">Rejected</span>';
             }
 
-            const uploadDate = new Date(note.dateUploaded).toLocaleDateString('en-US', {
+            const uploadDate = new Date().toLocaleDateString('en-US', {
               year: 'numeric', month: 'short', day: 'numeric'
             });
 
@@ -384,9 +386,9 @@
       }
 
       // Actions hook: Delete
-      window.handleDelete = function(noteId) {
+      window.handleDelete = async function(noteId) {
         if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
-          const success = deleteNote(noteId);
+          const success = await deleteNote(noteId);
           if (success) {
             showToast('Note deleted successfully!', 'success');
             loadDashboardData();
@@ -397,11 +399,16 @@
       };
 
       // Actions hook: Redownload
-      window.handleRedownload = function(noteId) {
-        const success = downloadNoteFile(noteId);
-        if (success) {
+      window.handleRedownload = async function(noteId) {
+        showToast('Preparing download...', 'success');
+        const result = await downloadNoteFile(noteId);
+        if (result === 'success') {
           showToast('Downloading note again...', 'success');
           loadDashboardData();
+        } else if (result === 'not_logged_in') {
+          showToast('Please log in first to download notes', 'warning');
+        } else if (result === 'file_missing') {
+          showToast('Uploaded file is missing on the server.', 'danger');
         } else {
           showToast('Failed to download note', 'danger');
         }

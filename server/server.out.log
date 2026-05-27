@@ -1,0 +1,12 @@
+◇ injected env (5) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Server running on port 5000
+MongoDB Connected Successfully
+📩 CONTACT API HIT {
+  email: 'test@example.com',
+  message: 'Testing contact API from Codex',
+  name: 'Test User',
+  subject: 'Technical Issue'
+}
+✅ MongoDB Saved Successfully
+📧 Sending Email via Nodemailer...
+✅ Email Sent Successfully!

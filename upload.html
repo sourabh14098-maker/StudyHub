@@ -295,21 +295,32 @@
       });
 
       // 6. Submit upload note form
-      uploadForm.addEventListener('submit', (e) => {
+      uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const title = document.getElementById('noteTitle').value;
         const description = document.getElementById('noteDescription').value;
         const semester = noteSemester.value;
         const subject = noteSubject.value;
-        const fileType = document.getElementById('noteFileType').value;
-        const fileSize = document.getElementById('noteFileSize').value;
 
-        // Perform mock upload (saves to localStorage)
-        const result = uploadNote(title, description, subject, semester, fileType, fileSize);
+        if (!selectedFile) {
+          showToast('Please select a file to upload', 'danger');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('semester', semester);
+        formData.append('subject', subject);
+        formData.append('file', selectedFile);
+
+        showToast('Uploading your notes to MongoDB Atlas...', 'info');
+
+        const result = await uploadNoteToBackend(formData);
         
         if (result.success) {
-          showToast('Notes submitted! Pending admin review.', 'success');
+          showToast('Notes uploaded and saved in MongoDB successfully!', 'success');
           uploadForm.reset();
           selectedFile = null;
           dropzone.style.display = 'flex';

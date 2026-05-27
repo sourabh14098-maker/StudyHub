@@ -447,6 +447,11 @@
       loadRecentNotes();
       configureCTAButtons();
       
+      document.addEventListener("notesLoaded", () => {
+        loadHomepageStats();
+        loadRecentNotes();
+      });
+      
       // Hero share notes link guard
       const shareLink = document.getElementById('heroUploadLink');
       if (shareLink) {
@@ -529,20 +534,23 @@
     }
 
     // 3. Download helper
-    window.handleDownload = function(noteId) {
-      const result = downloadNoteFile(noteId);
+    window.handleDownload = async function(noteId) {
+      showToast('Preparing download...', 'success');
+      const result = await downloadNoteFile(noteId);
       if (result === 'not_logged_in') {
         showToast('Please log in first to download notes', 'warning');
         setTimeout(() => {
           window.location.href = 'login.html?redirect=notes.html';
         }, 1200);
       } else if (result === 'success') {
-        showToast('Download started successfully!', 'success');
+        showToast('Download started.', 'success');
         // Reload recent notes and counters to increment download counts
         loadRecentNotes();
         loadHomepageStats();
+      } else if (result === 'file_missing') {
+        showToast('Uploaded file is missing on the server.', 'danger');
       } else {
-        showToast('Failed to download file', 'danger');
+        showToast('Failed to download note', 'danger');
       }
     };
 
