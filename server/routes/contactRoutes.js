@@ -34,19 +34,38 @@ function getTransporter() {
 
   return {
     mail,
-    transporter: nodemailer.createTransport({
-      host: mail.host,
-      port: mail.port,
-      secure: mail.secure,
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
-      auth: {
-        user: mail.user,
-        pass: mail.pass
-      }
-    })
+    transporter: createTransporter(mail)
   };
+}
+
+function createTransporter(mail) {
+  return nodemailer.createTransport({
+    host: mail.host,
+    port: mail.port,
+    secure: mail.secure,
+    requireTLS: !mail.secure,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+    auth: {
+      user: mail.user,
+      pass: mail.pass
+    }
+  });
+}
+
+function getFallbackMailConfig(mail) {
+  if (mail.port === 587 && mail.secure === false) return null;
+
+  return {
+    ...mail,
+    port: 587,
+    secure: false
+  };
+}
+
+function isConnectionError(error) {
+  return ["ECONNECTION", "ETIMEDOUT", "ESOCKET"].includes(error.code);
 }
 
 function getEmailFailureMessage(error) {
@@ -72,14 +91,12 @@ async function sendContactEmail({ name, email, subject, message }) {
     return { sent: false, reason: "Email environment variables are missing." };
   }
 
-  const { transporter } = getTransporter();
-
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(email);
   const safeSubject = escapeHtml(subject);
   const safeMessage = escapeHtml(message);
 
-  await transporter.sendMail({
+  const mailOptions = {
     from: `StudyHub Contact Form <${mail.user}>`,
     to: mail.to,
     replyTo: email,
@@ -108,7 +125,24 @@ async function sendContactEmail({ name, email, subject, message }) {
         </p>
       </div>
     `
-  });
+  };
+
+  try {
+    await createTransporter(mail).sendMail(mailOptions);
+  } catch (error) {
+    const fallbackMail = getFallbackMailConfig(mail);
+    if (!fallbackMail || !isConnectionError(error)) throw error;
+
+    console.warn("Primary Gmail SMTP connection failed, retrying with port 587 STARTTLS:", {
+      code: error.code,
+      message: error.message
+    });
+
+    await createTransporter(fallbackMail).sendMail({
+      ...mailOptions,
+      from: `StudyHub Contact Form <${fallbackMail.user}>`
+    });
+  }
 
   return { sent: true };
 }
@@ -145,6 +179,29 @@ router.get("/email-status", async (req, res) => {
       message: "Email SMTP is ready."
     });
   } catch (error) {
+    const fallbackMail = getFallbackMailConfig(mail);
+    if (fallbackMail && isConnectionError(error)) {
+      try {
+        await createTransporter(fallbackMail).verify();
+
+        return res.json({
+          ...status,
+          smtpReady: true,
+          smtpPort: fallbackMail.port,
+          smtpSecure: fallbackMail.secure,
+          message: "Email SMTP is ready on fallback port 587."
+        });
+      } catch (fallbackError) {
+        console.error("Fallback email status check failed:", {
+          message: fallbackError.message,
+          code: fallbackError.code,
+          command: fallbackError.command,
+          responseCode: fallbackError.responseCode,
+          response: fallbackError.response
+        });
+      }
+    }
+
     console.error("Email status check failed:", {
       message: error.message,
       code: error.code,
