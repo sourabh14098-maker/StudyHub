@@ -289,34 +289,16 @@ router.post("/", async (req, res) => {
     console.log("MongoDB saved contact:", newContact._id);
 
     try {
-      const emailResult = await sendContactEmail({ name, email, subject, message });
-
-      if (emailResult.sent) {
-        return res.status(201).json({
-          emailSent: true,
-          message: "Message saved and email sent successfully!"
-        });
-      }
-
-      console.warn("Email skipped:", emailResult.reason);
-      return res.status(202).json({
-        emailSent: false,
-        message: "Message saved in MongoDB, but email was not sent. Backend email config is missing."
-      });
+      await sendContactEmail({ name, email, subject, message });
+      console.log("Email sent");
     } catch (emailError) {
-      console.error("Email send failed:", {
-        message: emailError.message,
-        code: emailError.code,
-        command: emailError.command,
-        responseCode: emailError.responseCode,
-        response: emailError.response
-      });
-
-      return res.status(202).json({
-        emailSent: false,
-        message: `Message saved in MongoDB, but email was not sent. ${getEmailFailureMessage(emailError)}`
-      });
+      console.log("Email failed but MongoDB saved:", emailError.message);
     }
+    
+    return res.status(201).json({
+      emailSent: false,
+      message: "Message saved successfully. We received your request."
+    });
   } catch (error) {
     console.error("CONTACT ROUTE ERROR:", error.message);
     res.status(500).json({
