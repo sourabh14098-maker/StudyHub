@@ -317,6 +317,11 @@ try {
   throw new Error(result.message || "Message could not be sent.");
   }
 
+  if (result.emailSent === false) {
+  alert(result.message || "Message saved, but email was not sent.");
+  return;
+  }
+
   alert(result.message || "Message sent successfully");
   contactForm.reset();
   } catch (err) {

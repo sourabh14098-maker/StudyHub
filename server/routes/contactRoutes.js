@@ -29,6 +29,42 @@ function getMailConfig() {
   };
 }
 
+function getTransporter() {
+  const mail = getMailConfig();
+
+  return {
+    mail,
+    transporter: nodemailer.createTransport({
+      host: mail.host,
+      port: mail.port,
+      secure: mail.secure,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      auth: {
+        user: mail.user,
+        pass: mail.pass
+      }
+    })
+  };
+}
+
+function getEmailFailureMessage(error) {
+  if (!error) {
+    return "Email environment variables are missing on the backend.";
+  }
+
+  if (error.code === "EAUTH" || error.responseCode === 535 || error.responseCode === 534) {
+    return "Gmail rejected the login. Set a fresh 16-character Gmail App Password in Render EMAIL_PASS.";
+  }
+
+  if (error.code === "ECONNECTION" || error.code === "ETIMEDOUT" || error.code === "ESOCKET") {
+    return "Backend could not connect to Gmail SMTP. Check Render network/settings and Gmail SMTP config.";
+  }
+
+  return "Email could not be sent. Check Render logs for the SMTP error.";
+}
+
 async function sendContactEmail({ name, email, subject, message }) {
   const mail = getMailConfig();
 
@@ -36,18 +72,7 @@ async function sendContactEmail({ name, email, subject, message }) {
     return { sent: false, reason: "Email environment variables are missing." };
   }
 
-  const transporter = nodemailer.createTransport({
-    host: mail.host,
-    port: mail.port,
-    secure: mail.secure,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-    auth: {
-      user: mail.user,
-      pass: mail.pass
-    }
-  });
+  const { transporter } = getTransporter();
 
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(email);
@@ -88,6 +113,55 @@ async function sendContactEmail({ name, email, subject, message }) {
   return { sent: true };
 }
 
+router.get("/email-status", async (req, res) => {
+  const mail = getMailConfig();
+  const status = {
+    emailUserSet: Boolean(mail.user),
+    emailPassSet: Boolean(mail.pass),
+    emailToSet: Boolean(mail.to),
+    emailUser: mail.user ? mail.user.replace(/(.{2}).+(@.+)/, "$1***$2") : null,
+    emailTo: mail.to ? mail.to.replace(/(.{2}).+(@.+)/, "$1***$2") : null,
+    emailPassLength: mail.pass ? mail.pass.length : 0,
+    smtpHost: mail.host,
+    smtpPort: mail.port,
+    smtpSecure: mail.secure,
+    smtpReady: false
+  };
+
+  if (!mail.user || !mail.pass || !mail.to) {
+    return res.status(503).json({
+      ...status,
+      message: "Email config is missing on backend."
+    });
+  }
+
+  try {
+    const { transporter } = getTransporter();
+    await transporter.verify();
+
+    return res.json({
+      ...status,
+      smtpReady: true,
+      message: "Email SMTP is ready."
+    });
+  } catch (error) {
+    console.error("Email status check failed:", {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      responseCode: error.responseCode,
+      response: error.response
+    });
+
+    return res.status(503).json({
+      ...status,
+      message: getEmailFailureMessage(error),
+      errorCode: error.code || null,
+      responseCode: error.responseCode || null
+    });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     console.log("CONTACT API HIT", req.body);
@@ -127,9 +201,9 @@ router.post("/", async (req, res) => {
       }
 
       console.warn("Email skipped:", emailResult.reason);
-      return res.status(201).json({
+      return res.status(202).json({
         emailSent: false,
-        message: "Message saved successfully. We received your request."
+        message: "Message saved in MongoDB, but email was not sent. Backend email config is missing."
       });
     } catch (emailError) {
       console.error("Email send failed:", {
@@ -140,9 +214,9 @@ router.post("/", async (req, res) => {
         response: emailError.response
       });
 
-      return res.status(201).json({
+      return res.status(202).json({
         emailSent: false,
-        message: "Message saved successfully. We received your request."
+        message: `Message saved in MongoDB, but email was not sent. ${getEmailFailureMessage(emailError)}`
       });
     }
   } catch (error) {
