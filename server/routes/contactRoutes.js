@@ -40,18 +40,14 @@ function getTransporter() {
 
 function createTransporter(mail) {
   return nodemailer.createTransport({
-    host: mail.host,
-    port: mail.port,
-    secure: mail.secure,
-    requireTLS: !mail.secure,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-    auth: {
-      user: mail.user,
-      pass: mail.pass
-    }
-  });
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 }
 
 function getFallbackMailConfig(mail) {
