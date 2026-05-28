@@ -282,9 +282,7 @@
   };
 
   try {
-  const apiUrl = window.location.protocol === "file:"
-   ? "https://studyhub-backend-d7fd.onrender.com/api/contact"
-    : "/api/contact";
+  const apiUrl = "https://studyhub-backend-d7fd.onrender.com/api/contact";
 
   const res = await fetch(apiUrl, {
   method: "POST",
