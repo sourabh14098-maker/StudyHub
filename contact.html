@@ -292,7 +292,14 @@
   body: JSON.stringify(data)
   });
 
-  const result = await res.json();
+  const text = await res.text();
+
+let result = {};
+try {
+  result = JSON.parse(text);
+} catch {
+  result = { message: text };
+}
   if (!res.ok) {
   throw new Error(result.message || "Message could not be sent.");
   }
