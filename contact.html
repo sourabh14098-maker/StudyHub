@@ -269,8 +269,19 @@
   </footer>
 
   <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
   <script>
   const contactForm = document.getElementById("contactForm");
+  const contactSubmitButton = contactForm.querySelector('button[type="submit"]');
+  const originalSubmitHtml = contactSubmitButton.innerHTML;
+
+  function getApiBaseUrl() {
+    const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    if (window.location.protocol === "file:") return "http://localhost:5000";
+    if (isLocalhost) return "";
+    return "https://studyhub-backend-d7fd.onrender.com";
+  }
 
   contactForm.addEventListener("submit", async function(e) {
   e.preventDefault();
@@ -282,7 +293,11 @@
   };
 
   try {
-  const apiUrl = "https://studyhub-backend-d7fd.onrender.com/api/contact";
+  contactSubmitButton.disabled = true;
+  contactSubmitButton.style.opacity = "0.75";
+  contactSubmitButton.textContent = "Sending...";
+
+  const apiUrl = `${getApiBaseUrl()}/api/contact`;
 
   const res = await fetch(apiUrl, {
   method: "POST",
@@ -306,6 +321,11 @@ try {
   contactForm.reset();
   } catch (err) {
   alert("Frontend/network error: " + err.message);
+  } finally {
+  contactSubmitButton.disabled = false;
+  contactSubmitButton.style.opacity = "";
+  contactSubmitButton.innerHTML = originalSubmitHtml;
+  if (window.lucide) window.lucide.createIcons();
   }
   });
   </script>

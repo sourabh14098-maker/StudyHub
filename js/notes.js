@@ -13,7 +13,15 @@ let cachedNotes = [];
 let cachedDownloads = [];
 
 function apiUrl(path) {
-  const baseUrl = window.location.protocol === "file:" ? "http://localhost:5000" : "";
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  let baseUrl = "";
+
+  if (window.location.protocol === "file:") {
+    baseUrl = "http://localhost:5000";
+  } else if (!isLocalhost) {
+    baseUrl = "https://studyhub-backend-d7fd.onrender.com";
+  }
+
   return `${baseUrl}${path}`;
 }
 
