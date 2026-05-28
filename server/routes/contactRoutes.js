@@ -66,6 +66,34 @@ function isConnectionError(error) {
   return ["ECONNECTION", "ETIMEDOUT", "ESOCKET"].includes(error.code);
 }
 
+async function sendViaFormSubmit(mail, payload) {
+  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(mail.to)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Origin": process.env.FRONTEND_URL || "https://dainty-bienenstitch-127b68.netlify.app",
+      "Referer": `${process.env.FRONTEND_URL || "https://dainty-bienenstitch-127b68.netlify.app"}/contact.html`
+    },
+    body: JSON.stringify({
+      name: payload.name,
+      email: payload.email,
+      subject: payload.subject,
+      message: payload.message,
+      _subject: `New StudyHub Enquiry: ${payload.subject}`,
+      _template: "table",
+      _captcha: "false"
+    })
+  });
+
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok || result.success === false) {
+    throw new Error(result.message || "FormSubmit fallback failed.");
+  }
+
+  return result;
+}
+
 function getEmailFailureMessage(error) {
   if (!error) {
     return "Email environment variables are missing on the backend.";
@@ -129,17 +157,32 @@ async function sendContactEmail({ name, email, subject, message }) {
     await createTransporter(mail).sendMail(mailOptions);
   } catch (error) {
     const fallbackMail = getFallbackMailConfig(mail);
-    if (!fallbackMail || !isConnectionError(error)) throw error;
+    if (!fallbackMail || !isConnectionError(error)) {
+      await sendViaFormSubmit(mail, { name, email, subject, message });
+      return { sent: true, fallback: "formsubmit" };
+    }
 
     console.warn("Primary Gmail SMTP connection failed, retrying with port 587 STARTTLS:", {
       code: error.code,
       message: error.message
     });
 
-    await createTransporter(fallbackMail).sendMail({
-      ...mailOptions,
-      from: `StudyHub Contact Form <${fallbackMail.user}>`
-    });
+    try {
+      await createTransporter(fallbackMail).sendMail({
+        ...mailOptions,
+        from: `StudyHub Contact Form <${fallbackMail.user}>`
+      });
+    } catch (fallbackError) {
+      if (!isConnectionError(fallbackError)) throw fallbackError;
+
+      console.warn("Gmail SMTP fallback also failed, sending via FormSubmit HTTPS:", {
+        code: fallbackError.code,
+        message: fallbackError.message
+      });
+
+      await sendViaFormSubmit(mail, { name, email, subject, message });
+      return { sent: true, fallback: "formsubmit" };
+    }
   }
 
   return { sent: true };

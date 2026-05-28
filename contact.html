@@ -283,6 +283,37 @@
     return "https://studyhub-backend-d7fd.onrender.com";
   }
 
+  async function sendEmailFallback(data) {
+    const res = await fetch("https://formsubmit.co/ajax/sourabh14098@gmail.com", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        _subject: `New StudyHub Enquiry: ${data.subject}`,
+        _template: "table",
+        _captcha: "false",
+        _url: window.location.href
+      })
+    });
+
+    const result = await res.json().catch(() => ({}));
+    if (result.message && result.message.toLowerCase().includes("activation")) {
+      return { activationRequired: true, message: result.message };
+    }
+
+    if (!res.ok || result.success === false) {
+      throw new Error(result.message || "Email fallback failed.");
+    }
+
+    return result;
+  }
+
   contactForm.addEventListener("submit", async function(e) {
   e.preventDefault();
   const data = {
@@ -318,7 +349,13 @@ try {
   }
 
   if (result.emailSent === false) {
-  alert(result.message || "Message saved, but email was not sent.");
+  const fallbackResult = await sendEmailFallback(data);
+  if (fallbackResult.activationRequired) {
+  alert("Activation email sent to StudyHub Gmail. Open sourabh14098@gmail.com inbox/spam and click 'Activate Form' once, then submit again.");
+  return;
+  }
+  alert("Message saved and email sent successfully!");
+  contactForm.reset();
   return;
   }
 
